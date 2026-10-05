@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  Scripts globais SDAE. Uso: th:replace="~{fragments/sdae-scripts :: bundle}" antes de </body>
+  Atributo opcional extra: nome do arquivo em /js/ (ex: 'dashboard.js')
+-->
+<th:block th:fragment="bundle(extra)">
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/nav.js}"></script>
+    <script th:if="${extra != null and !#strings.isEmpty(extra)}" th:src="@{'/js/' + ${extra}}"></script>
+</th:block>
+</body>
+</html>

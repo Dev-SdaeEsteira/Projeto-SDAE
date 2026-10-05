@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDAE — Detalhe da Esteira</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/sdae-base.css}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        html { font-size: 18px; }
+        body { background: #F4F6FA; color: #1A202C; font-family: var(--font-sans); min-height: 100vh; }
+        main { padding: 24px 28px 40px; max-width: 1300px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+        
+        .page-header { display: flex; align-items: flex-end; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid #E8EDF5; }
+        .page-title { font-family: var(--font-serif); font-size: 30px; font-weight: 700; color: #0A0E1A; }
+        .page-sub { font-family: var(--font-mono); font-size: 12px; letter-spacing: 2px; color: #4A5568; text-transform: uppercase; margin-top: 3px; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: #fff; border: 1px solid #E8EDF5; border-radius: var(--r-md); overflow: hidden; }
+        .card-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid #E8EDF5; background: #FAFBFD; }
+        .card-title { font-family: var(--font-serif); font-size: 17px; font-weight: 600; color: #0A0E1A; }
+        .card-body { padding: 20px; }
+        
+        .stat-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #E8EDF5; }
+        .stat-item:last-child { border-bottom: none; }
+        .stat-label { font-size: 13px; color: #4A5568; font-weight: 500; }
+        .stat-value { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: #0A0E1A; }
+        
+        .chip { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; }
+        .chip-ok    { background: rgba(16,185,129,.12); color: #059669; border: 1px solid rgba(16,185,129,.3); }
+        .chip-stop  { background: rgba(239,68,68,.12); color: #DC2626; border: 1px solid rgba(239,68,68,.3); }
+        .chip-off   { background: rgba(100,116,139,.12); color: #475569; border: 1px solid rgba(100,116,139,.3); }
+        .chip-maint { background: rgba(37,99,235,.12); color: #2563EB; border: 1px solid rgba(37,99,235,.3); }
+        
+        .btn { font-family: var(--font-sans); font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all .2s; }
+        .btn-primary { background: #2563EB; color: white; }
+        .btn-primary:hover { background: #1D4ED8; }
+        .btn-ghost { background: white; color: #4A5568; border: 1px solid #D1DCF0; }
+        .btn-ghost:hover { border-color: #2563EB; }
+        .btn-warning { background: #F59E0B; color: white; }
+        .btn-warning:hover { background: #D97706; }
+        
+        .table-wrap { overflow-x: auto; max-height: 250px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: var(--font-mono); }
+        th { text-align: left; padding: 8px 12px; color: #64748B; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid #E8EDF5; background: #F8FAFC; position: sticky; top: 0; }
+        td { padding: 8px 12px; border-bottom: 1px solid #E8EDF5; color: #1A202C; }
+        tr:hover td { background: rgba(37,99,235,.03); }
+        
+        .api-key-box { display: flex; align-items: center; gap: 8px; background: #F1F5F9; padding: 6px 10px; border-radius: 4px; font-family: var(--font-mono); font-size: 12px; }
+        
+        @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header(paginaAtiva='esteiras')}"></header>
+
+<main>
+    <div class="page-header">
+        <div>
+            <div class="page-title" th:text="${esteira.nome}">Esteira 01</div>
+            <div class="page-sub" th:text="${esteira.localizacao}">Localização</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+            <!-- Botão de Alternar Manutenção (Req. 6, 23) -->
+            <form th:action="@{'/esteiras/' + ${esteira.id} + '/manutencao'}" method="post" style="display:inline;margin:0;">
+                <th:block th:replace="~{fragments/csrf :: token}"/>
+                <input type="hidden" name="entrar" th:value="${esteira.estado.name() != 'MAINTENANCE'}">
+                <button type="submit" class="btn"
+                        th:classappend="${esteira.estado.name() == 'MAINTENANCE'} ? 'btn-primary' : 'btn-warning'"
+                        th:text="${esteira.estado.name() == 'MAINTENANCE'} ? 'Sair de Manutenção' : 'Colocar em Manutenção'">
+                    Colocar em Manutenção
+                </button>
+            </form>
+            <a href="/esteiras" class="btn btn-ghost">← Voltar</a>
+        </div>
+    </div>
+
+    <!-- Informações Gerais & Telemetria em Tempo Real (Req. 23) -->
+    <div class="grid-2">
+
+        <!-- Card: Estado Atual & Tempos -->
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title">Estado Atual da Esteira</div>
+                <div>
+                    <span th:if="${esteira.estado.name() == 'RUNNING'}" class="chip chip-ok">🟢 Funcionando</span>
+                    <span th:if="${esteira.estado.name() == 'STOPPED'}" class="chip chip-stop">🔴 Parada</span>
+                    <span th:if="${esteira.estado.name() == 'OFFLINE'}" class="chip chip-off">⚫ Offline</span>
+                    <span th:if="${esteira.estado.name() == 'MAINTENANCE'}" class="chip chip-maint">🟡 Manutenção</span>
+                    <span th:if="${esteira.estado.name() == 'ERROR'}" class="chip chip-stop">⚡ Erro</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="stat-item">
+                    <span class="stat-label">ID da Esteira</span>
+                    <span class="stat-value" th:text="${esteira.id}">1</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Tempo em Operação</span>
+                    <span class="stat-value" style="color:#059669;" th:text="${esteira.tempoFuncionandoFormatado}">00:00:00</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Tempo Parada</span>
+                    <span class="stat-value" style="color:#DC2626;" th:text="${esteira.tempoParadoFormatado}">00:00:00</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Último Pulso Detectado</span>
+                    <span class="stat-value" th:text="${esteira.ultimoPulsoTexto}">—</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Última Comunicação</span>
+                    <span class="stat-value" th:text="${esteira.ultimaComunicacaoTexto}">—</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Limiar LDR (Threshold)</span>
+                    <span class="stat-value" th:text="${esteira.ldrThreshold}">1800</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Timeout de Parada</span>
+                    <span class="stat-value" th:text="${esteira.stopTimeoutSeconds} + ' segundos'">15s</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Timeout Offline</span>
+                    <span class="stat-value" th:text="${esteira.offlineTimeoutSeconds} + ' segundos'">15s</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card: Sensores Vinculados & Hardware -->
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title">Sensor Vinculado (Laser + LDR)</div>
+                <span class="card-sub" th:text="${sensoresVinculados != null ? #lists.size(sensoresVinculados) : 0} + ' sensor(es)'">1 sensor</span>
+            </div>
+            <div class="card-body">
+                <div th:if="${sensoresVinculados != null and !#lists.isEmpty(sensoresVinculados)}"
+                     th:with="s=${sensoresVinculados[0]}">
+                    <div class="stat-item">
+                        <span class="stat-label">Modelo / Nome</span>
+                        <span class="stat-value" th:text="${s.modelo}">LDR-001</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">ID do Sensor</span>
+                        <span class="stat-value" th:text="${s.id}">1</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Status da Conexão</span>
+                        <span class="stat-value">
+                            <span th:if="${s.conectado}" style="color:#059669;font-weight:700;">● Online</span>
+                            <span th:unless="${s.conectado}" style="color:#DC2626;font-weight:700;">● Offline</span>
+                        </span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Valor LDR Atual</span>
+                        <span class="stat-value" style="font-size:16px;color:#2563EB;" th:text="${s.ultimoValorLdr != null ? s.ultimoValorLdr : 0}">1820</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Laser Detectado</span>
+                        <span class="stat-value" th:text="${s.laserDetectado} ? 'Sim (Feixe Presente)' : 'Não (Interrompido)'">Sim</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Total de Pulsos</span>
+                        <span class="stat-value" th:text="${s.quantidadePulsos}">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">API Key do ESP32</span>
+                        <div class="api-key-box">
+                            <span id="apiKeyText" th:text="${s.apiKey}">key-uuid</span>
+                            <button type="button" class="btn btn-ghost" style="padding:2px 8px;font-size:11px;" onclick="copiarApiKey()">Copiar</button>
+                        </div>
+                    </div>
+                </div>
+                <div th:if="${sensoresVinculados == null or #lists.isEmpty(sensoresVinculados)}" style="text-align:center;padding:24px;color:#64748B;">
+                    Nenhum sensor vinculado a esta esteira.
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Gráfico Real de Leituras (Req. 21, 23) -->
+    <div class="card">
+        <div class="card-head">
+            <div class="card-title">Gráfico Histórico de Leituras LDR</div>
+            <span class="card-sub">Telemetria Real do Sensor</span>
+        </div>
+        <div class="card-body">
+            <div style="height:220px;position:relative;">
+                <canvas id="leituraChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Histórico de Eventos da Esteira (Req. 20, 23) -->
+    <div class="card">
+        <div class="card-head">
+            <div class="card-title">Tabela de Eventos da Esteira</div>
+            <span class="card-sub" th:text="${eventos != null ? #lists.size(eventos) : 0} + ' registros'">Eventos</span>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Data/Hora</th>
+                    <th>Evento</th>
+                    <th>Estado Anterior</th>
+                    <th>Novo Estado</th>
+                    <th>Duração</th>
+                    <th>Observação</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="ev : ${eventos}">
+                    <td th:text="${ev.dataHoraInicio != null ? #temporals.format(ev.dataHoraInicio, 'dd/MM/yyyy HH:mm:ss') : '—'}">10/05/2026 12:00:00</td>
+                    <td><span style="font-weight:700;color:#2563EB;" th:text="${ev.tipoEvento}">START</span></td>
+                    <td th:text="${ev.estadoAnterior}">STOPPED</td>
+                    <td th:text="${ev.novoEstado}">RUNNING</td>
+                    <td th:text="${ev.duracaoFormatada}">00:15</td>
+                    <td th:text="${ev.observacao}">—</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(eventos)}">
+                    <td colspan="6" style="text-align:center;padding:20px;color:#64748B;">Nenhum evento registrado ainda para esta esteira.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer><span>SDAE | Detalhe da Esteira</span><span id="fdate">—</span></footer>
+</main>
+
+<script th:inline="javascript">
+    function copiarApiKey() {
+        const key = document.getElementById('apiKeyText')?.textContent;
+        if (key) {
+            navigator.clipboard.writeText(key).then(() => {
+                alert('Chave de API copiada para a área de transferência!');
+            });
+        }
+    }
+
+    // Carrega dados reais do gráfico via API
+    document.addEventListener('DOMContentLoaded', async () => {
+        const esteiraId = /*[[${esteira.id}]]*/ 1;
+        try {
+            const res = await fetch(`/api/dashboard/grafico-ldr?esteiraId=${esteiraId}&periodo=15m`, { credentials: 'same-origin' });
+            if (!res.ok) return;
+            const dados = await res.json();
+            
+            const labels = dados.map(d => d.hora);
+            const valores = dados.map(d => d.valorLdr);
+
+            const ctx = document.getElementById('leituraChart')?.getContext('2d');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels.length > 0 ? labels : ['Sem dados'],
+                        datasets: [{
+                            label: 'LDR (0-4095)',
+                            data: valores.length > 0 ? valores : [0],
+                            borderColor: '#2563EB',
+                            backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                            tension: 0.2,
+                            fill: true,
+                            pointRadius: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { labels: { font: { family: 'IBM Plex Mono' } } }
+                        },
+                        scales: {
+                            y: {
+                                min: 0,
+                                max: 4095,
+                                ticks: { font: { family: 'IBM Plex Mono' } }
+                            },
+                            x: {
+                                ticks: { font: { family: 'IBM Plex Mono' } }
+                            }
+                        }
+                    }
+                });
+            }
+        } catch (e) {
+            console.warn('Erro ao carregar gráfico:', e);
+        }
+    });
+</script>
+</body>
+</html>

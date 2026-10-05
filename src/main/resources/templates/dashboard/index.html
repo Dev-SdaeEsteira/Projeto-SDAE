@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDAE — Dashboard de Monitoramento</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/sdae-base.css}">
+    <style>
+        html { font-size: 18px; }
+
+        body {
+            background: #F4F6FA;
+            color: #1A202C;
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image:
+                    radial-gradient(ellipse 80% 40% at 50% -5%, rgba(255,255,255,0.1) 0%, transparent 55%),
+                    linear-gradient(#E8EDF5 1px, transparent 1px),
+                    linear-gradient(90deg, #E8EDF5 1px, transparent 1px);
+            background-size: 100% 100%, 48px 48px, 48px 48px;
+        }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track  { background: #F4F6FA; }
+        ::-webkit-scrollbar-thumb  { background: #C7D7F8; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #2563EB; }
+
+        @keyframes pls {
+            0%,100% { box-shadow: 0 0 0 0 rgba(0,200,151,.5); }
+            50%      { box-shadow: 0 0 0 5px rgba(0,200,151,0); }
+        }
+
+        /* ── ALERT RIBBON ── */
+        .ribbon {
+            display: none; align-items: center; gap: 12px;
+            padding: 9px 28px;
+            background: linear-gradient(90deg, rgba(239,68,68,.14), rgba(239,68,68,.04));
+            border-bottom: 1px solid rgba(239,68,68,.3);
+            font-family: var(--font-mono); font-size: 13px;
+            color: #DC2626; letter-spacing: 1px;
+            animation: rfls 1.2s ease-in-out infinite alternate;
+        }
+        .ribbon.on { display: flex; }
+        @keyframes rfls {
+            from { background: linear-gradient(90deg, rgba(239,68,68,.1), rgba(239,68,68,.03)); }
+            to   { background: linear-gradient(90deg, rgba(239,68,68,.2), rgba(239,68,68,.07)); }
+        }
+        .ribbon-icon { font-size: 18px; animation: blink .7s step-end infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+        .ribbon-close { margin-left: auto; cursor: pointer; opacity: .6; font-size: 18px; }
+        .ribbon-close:hover { opacity: 1; }
+
+        /* ── MAIN GRID ── */
+        main {
+            display: grid;
+            grid-template-columns: 280px 1fr 310px;
+            gap: 16px;
+            padding: 20px 26px 28px;
+            max-width: 1720px;
+            margin: 0 auto;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── KPI BAR (Req. 16) ── */
+        .kpi-bar {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+        }
+
+        .kpi {
+            background: white;
+            border: 1px solid #E8EDF5;
+            border-radius: var(--r-md);
+            padding: 14px 16px;
+            display: flex; align-items: center; gap: 12px;
+            transition: border-color .25s, box-shadow .25s;
+            animation: fadeUp .5s ease both;
+        }
+        .kpi:hover { border-color: rgba(37,99,235,.35); box-shadow: 0 0 20px rgba(37,99,235,.08); }
+
+        .kpi-icon {
+            width: 42px; height: 42px; border-radius: var(--r-sm);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; flex-shrink: 0;
+        }
+        .ki-green { background: rgba(16,185,129,.1); color: #059669; border: 1px solid rgba(16,185,129,.25); }
+        .ki-red   { background: rgba(239,68,68,.1); color: #DC2626; border: 1px solid rgba(239,68,68,.25); }
+        .ki-gray  { background: rgba(100,116,139,.1); color: #475569; border: 1px solid rgba(100,116,139,.25); }
+        .ki-blue  { background: rgba(37,99,235,.08); color: #2563EB; border: 1px solid #D1DCF0; }
+        .ki-amber { background: rgba(245,158,11,.08); color: #D97706; border: 1px solid rgba(245,158,11,.25); }
+
+        .kpi-val {
+            font-family: var(--font-serif);
+            font-size: 28px; font-weight: 700;
+            color: #0A0E1A; line-height: 1; letter-spacing: -.5px;
+        }
+        .kpi-lbl {
+            font-size: 12px; font-weight: 500; letter-spacing: .4px;
+            color: #4A5568; margin-top: 4px; text-transform: uppercase;
+        }
+
+        /* ── CARD BASE ── */
+        .card {
+            background: white;
+            border: 1px solid #E8EDF5;
+            border-radius: var(--r-md);
+            overflow: hidden;
+        }
+
+        .card-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 17px 10px;
+            border-bottom: 1px solid #E8EDF5;
+            background: #FAFBFD;
+        }
+
+        .card-title {
+            font-family: var(--font-serif);
+            font-size: 17px; font-weight: 600;
+            color: #0A0E1A; letter-spacing: .3px;
+        }
+
+        .card-sub {
+            font-family: var(--font-mono);
+            font-size: 11px; color: #64748B;
+            letter-spacing: 1.5px; text-transform: uppercase;
+        }
+
+        /* ── CHIPS ── */
+        .chip {
+            font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+            letter-spacing: 1px; text-transform: uppercase;
+            padding: 3px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px;
+        }
+        .chip-ok    { background: rgba(16,185,129,.12); color: #059669; border: 1px solid rgba(16,185,129,.3); }
+        .chip-stop  { background: rgba(239,68,68,.12); color: #DC2626; border: 1px solid rgba(239,68,68,.3); }
+        .chip-off   { background: rgba(100,116,139,.12); color: #475569; border: 1px solid rgba(100,116,139,.3); }
+        .chip-maint { background: rgba(37,99,235,.12); color: #2563EB; border: 1px solid rgba(37,99,235,.3); }
+
+        /* ════ LEFT PANEL: Cards das Esteiras (Req. 17) ════ */
+        .panel-left {
+            grid-column: 1;
+            display: flex; flex-direction: column; gap: 12px;
+            overflow-y: auto; max-height: calc(100vh - 180px);
+        }
+
+        .sec-label {
+            font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px;
+            text-transform: uppercase; color: #64748B;
+            padding-bottom: 6px; border-bottom: 1px solid #E8EDF5;
+            position: sticky; top: 0; background: #F4F6FA; z-index: 1;
+        }
+
+        .esteira-card {
+            background: white;
+            border: 1px solid #E8EDF5;
+            border-radius: var(--r-md);
+            padding: 14px;
+            position: relative; overflow: hidden;
+            transition: all .2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,.02);
+        }
+        .esteira-card:hover {
+            border-color: rgba(37,99,235,.4);
+            box-shadow: 0 4px 12px rgba(37,99,235,.06);
+        }
+        .esteira-card.running { border-left: 4px solid #10B981; }
+        .esteira-card.stopped { border-left: 4px solid #EF4444; }
+        .esteira-card.offline { border-left: 4px solid #64748B; }
+        .esteira-card.maintenance { border-left: 4px solid #2563EB; }
+
+        .ec-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .ec-title { font-family: var(--font-serif); font-size: 18px; font-weight: 700; color: #0A0E1A; }
+        .ec-loc { font-size: 12px; color: #64748B; margin-top: 1px; }
+
+        .ec-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;
+            background: #F8FAFC; padding: 10px; border-radius: 6px; border: 1px solid #E8EDF5;
+        }
+        .ec-item { display: flex; flex-direction: column; gap: 2px; }
+        .ec-item-lbl { font-size: 10px; text-transform: uppercase; color: #64748B; letter-spacing: .5px; }
+        .ec-item-val { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: #0A0E1A; }
+
+        /* ════ CENTER PANEL: Belt + Tables (Req. 18, 20) ════ */
+        .panel-center {
+            grid-column: 2;
+            display: flex; flex-direction: column; gap: 14px;
+        }
+
+        .belt-scene {
+            position: relative; height: 110px;
+            background: linear-gradient(180deg, #EEF2FF 0%, #E8EEFF 100%);
+            border: 1px solid #E8EDF5; border-radius: var(--r-sm);
+            overflow: hidden;
+        }
+        .roller {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 14px; height: 46px;
+            background: linear-gradient(90deg, #CBD5E1, #94A3B8, #CBD5E1);
+            border: 1px solid rgba(37,99,235,.35); border-radius: 2px; z-index: 3;
+        }
+        .roller.L { left: 4px; }
+        .roller.R { right: 4px; }
+        .belt-track {
+            position: absolute; top: calc(50% - 15px); left: 16px; right: 16px; height: 30px;
+            background: repeating-linear-gradient(90deg, #E2E8F0 0px, #E2E8F0 24px, #D1DBF0 24px, #D1DBF0 48px);
+            border-top: 1px solid rgba(33,150,243,.2);
+            border-bottom: 1px solid rgba(33,150,243,.2);
+            animation: broll 1.2s linear infinite;
+        }
+        .belt-track.halt { animation-play-state: paused; }
+        @keyframes broll { from { background-position: 0 0; } to { background-position: 48px 0; } }
+
+        .sbeam {
+            position: absolute; top: 0; bottom: 0; width: 2px;
+            background: linear-gradient(180deg, transparent 0%, rgba(239,68,68,.7) 50%, transparent 100%);
+            z-index: 5; animation: lpulse 1.5s ease-in-out infinite;
+        }
+        @keyframes lpulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
+
+        /* Tables styling */
+        .log-scroll { overflow-y: auto; max-height: 240px; }
+        .log-table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 12px; }
+        .log-table th {
+            text-align: left; padding: 8px 12px; color: #64748B; font-size: 11px;
+            letter-spacing: 1.5px; text-transform: uppercase; border-bottom: 1px solid #E8EDF5;
+            position: sticky; top: 0; background: #F8FAFC; z-index: 1;
+        }
+        .log-table td { padding: 9px 12px; border-bottom: 1px solid #E8EDF5; color: #1A202C; }
+        .log-table tr:hover td { background: rgba(37,99,235,.03); }
+
+        /* ════ RIGHT PANEL: Gauge + Chart + Alerts (Req. 21) ════ */
+        .panel-right {
+            grid-column: 3;
+            display: flex; flex-direction: column; gap: 14px;
+            overflow-y: auto; max-height: calc(100vh - 180px);
+        }
+
+        .chart-ctrls { display: flex; gap: 6px; }
+        .btn-period {
+            font-family: var(--font-mono); font-size: 11px; padding: 3px 8px; border-radius: 4px;
+            border: 1px solid #D1DCF0; background: white; cursor: pointer; color: #4A5568;
+        }
+        .btn-period.active { background: #2563EB; color: white; border-color: #2563EB; }
+
+        .gauge-ring { position: relative; width: 120px; height: 120px; margin: 0 auto; }
+        .gauge-ring svg { transform: rotate(-90deg); }
+        .g-bg  { fill: none; stroke: #EEF2FF; stroke-width: 9; }
+        .g-arc {
+            fill: none; stroke: #2563EB; stroke-width: 9; stroke-linecap: round;
+            stroke-dasharray: 377; stroke-dashoffset: 300; transition: stroke-dashoffset .6s, stroke .4s;
+        }
+        .gauge-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+        .g-num { font-family: var(--font-serif); font-size: 32px; font-weight: 700; color: #0A0E1A; line-height: 1; }
+        .g-unit { font-family: var(--font-mono); font-size: 10px; color: #64748B; text-transform: uppercase; margin-top: 2px; }
+
+        @media (max-width: 1280px) {
+            main { grid-template-columns: 260px 1fr; }
+            .panel-right { grid-column: 1 / -1; }
+        }
+        @media (max-width: 900px) {
+            main { grid-template-columns: 1fr; padding: 16px; }
+            .kpi-bar { grid-template-columns: repeat(2, 1fr); }
+            .panel-left { max-height: none; }
+        }
+    </style>
+</head>
+<body>
+
+<header th:replace="~{fragments/header :: header(paginaAtiva='dashboard')}"></header>
+
+<!-- ALERT RIBBON -->
+<div class="ribbon" id="ribbon">
+    <span class="ribbon-icon">⚠</span>
+    <span id="ribbonMsg">ALERTA CRÍTICO: DETECTADA PARADA OU FALHA DE SENSOR NA ESTEIRA</span>
+    <span class="ribbon-close" onclick="this.parentElement.classList.remove('on')">✕</span>
+</div>
+
+<main>
+
+    <!-- ── LINHA 1: KPIS REAIS (Req. 16) ── -->
+    <div class="kpi-bar">
+        <div class="kpi">
+            <div class="kpi-icon ki-green">🟢</div>
+            <div>
+                <div class="kpi-val" id="kFuncionando" th:text="${totalFuncionando}">0</div>
+                <div class="kpi-lbl">Funcionando</div>
+            </div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-icon ki-red">🔴</div>
+            <div>
+                <div class="kpi-val" id="kParadas" th:text="${totalParadas}">0</div>
+                <div class="kpi-lbl">Paradas</div>
+            </div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-icon ki-gray">⚫</div>
+            <div>
+                <div class="kpi-val" id="kOffline" th:text="${totalOffline}">0</div>
+                <div class="kpi-lbl">Offline</div>
+            </div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-icon ki-blue">◈</div>
+            <div>
+                <div class="kpi-val" id="kSensores" th:text="${totalSensores}">0</div>
+                <div class="kpi-lbl">Sensores LDR</div>
+            </div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-icon ki-amber">⚠</div>
+            <div>
+                <div class="kpi-val" id="kAlert" th:text="${totalAlertasHoje}">0</div>
+                <div class="kpi-lbl">Alertas Ativos</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════ COLUNA 1: CARDS DAS ESTEIRAS (Req. 17) ════ -->
+    <div class="panel-left">
+        <div class="sec-label">Cards das Esteiras</div>
+        <div id="esteirasCardsContainer">
+            <!-- Renderizado dinamicamente via JS / SSR inicial -->
+            <div th:each="e : ${esteiras}" class="esteira-card"
+                 th:classappend="${e.estado.name() == 'RUNNING'} ? 'running' : (${e.estado.name() == 'STOPPED'} ? 'stopped' : (${e.estado.name() == 'OFFLINE'} ? 'offline' : 'maintenance'))">
+                <div class="ec-head">
+                    <div>
+                        <div class="ec-title" th:text="${e.nome}">Esteira 01</div>
+                        <div class="ec-loc" th:text="${e.localizacao}">Setor A</div>
+                    </div>
+                    <div>
+                        <span th:if="${e.estado.name() == 'RUNNING'}" class="chip chip-ok">🟢 Funcionando</span>
+                        <span th:if="${e.estado.name() == 'STOPPED'}" class="chip chip-stop">🔴 Parada</span>
+                        <span th:if="${e.estado.name() == 'OFFLINE'}" class="chip chip-off">⚫ Offline</span>
+                        <span th:if="${e.estado.name() == 'MAINTENANCE'}" class="chip chip-maint">🟡 Manutenção</span>
+                    </div>
+                </div>
+
+                <div class="ec-grid">
+                    <div class="ec-item">
+                        <span class="ec-item-lbl">Sensor</span>
+                        <span class="ec-item-val" th:text="${e.sensores != null and !#lists.isEmpty(e.sensores)} ? ${e.sensores[0].modelo} : '—'">LDR-001</span>
+                    </div>
+                    <div class="ec-item">
+                        <span class="ec-item-lbl">LDR Atual</span>
+                        <span class="ec-item-val" th:text="${e.sensores != null and !#lists.isEmpty(e.sensores)} ? ${e.sensores[0].ultimoValorLdr} : '—'">1820</span>
+                    </div>
+                    <div class="ec-item">
+                        <span class="ec-item-lbl">Último Pulso</span>
+                        <span class="ec-item-val" th:text="${e.ultimoPulsoTexto}">—</span>
+                    </div>
+                    <div class="ec-item">
+                        <span class="ec-item-lbl">Última Com.</span>
+                        <span class="ec-item-val" th:text="${e.ultimaComunicacaoTexto}">—</span>
+                    </div>
+                    <div class="ec-item" style="grid-column: 1 / -1;">
+                        <span class="ec-item-lbl" th:text="${e.estado.name() == 'STOPPED'} ? 'Parada há:' : 'Operando há:'">Tempo:</span>
+                        <span class="ec-item-val" th:text="${e.estado.name() == 'STOPPED'} ? ${e.tempoParadoFormatado} : ${e.tempoFuncionandoFormatado}">00:00:00</span>
+                    </div>
+                </div>
+
+                <div style="margin-top:10px;text-align:right;">
+                    <a th:href="@{'/esteiras/detalhe/' + ${e.id}}" style="font-size:12px;color:#2563EB;text-decoration:none;font-weight:600;">Ver detalhes →</a>
+                </div>
+            </div>
+
+            <div th:if="${#lists.isEmpty(esteiras)}" style="padding:20px;text-align:center;color:#64748B;font-size:13px;">
+                Nenhuma esteira cadastrada.<br>
+                <a href="/esteiras/nova" style="color:#2563EB;font-weight:600;">Cadastrar esteira →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════ COLUNA 2: VISUALIZAÇÃO + TABELA DE ESTEIRAS + EVENTOS (Req. 18, 20) ════ -->
+    <div class="panel-center">
+
+        <!-- Cena da Esteira -->
+        <div class="card">
+            <div class="card-head">
+                <div>
+                    <div class="card-title">Monitoramento Físico: Laser + LDR</div>
+                    <span class="card-sub" id="beltSubText">Status em tempo real</span>
+                </div>
+                <span class="chip chip-ok" id="mainBeltStatusChip">Operando</span>
+            </div>
+            <div style="padding:14px 16px;">
+                <div class="belt-scene">
+                    <div class="roller L"></div>
+                    <div class="roller R"></div>
+                    <div class="belt-track" id="mainBeltTrack"></div>
+                    <div class="sbeam" style="left:50%;" title="Feixe do Laser KY-008"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;font-family:var(--font-mono);color:#64748B;">
+                    <span>ESP32 ADC: GPIO 34 (LDR)</span>
+                    <span id="laserBeamStatus">Laser: Ativo</span>
+                    <span>Modo: Detecção de Feixe e Pulsos</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABELA DE ESTEIRAS (Req. 18) -->
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title">Tabela de Esteiras</div>
+                <span class="card-sub">Dados Reais do MySQL</span>
+            </div>
+            <div class="log-scroll">
+                <table class="log-table">
+                    <thead>
+                    <tr>
+                        <th>Esteira</th>
+                        <th>Sensor</th>
+                        <th>Status</th>
+                        <th style="text-align:right;">LDR</th>
+                        <th>Laser</th>
+                        <th>Último Pulso</th>
+                        <th>Última Comunicação</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tbEsteirasBody">
+                    <tr th:each="e : ${esteiras}">
+                        <td style="font-weight:600;" th:text="${e.nome}">Esteira 01</td>
+                        <td th:text="${e.sensores != null and !#lists.isEmpty(e.sensores)} ? ${e.sensores[0].modelo} : '—'">LDR-001</td>
+                        <td>
+                            <span th:if="${e.estado.name() == 'RUNNING'}" class="chip chip-ok">🟢 Funcionando</span>
+                            <span th:if="${e.estado.name() == 'STOPPED'}" class="chip chip-stop">🔴 Parada</span>
+                            <span th:if="${e.estado.name() == 'OFFLINE'}" class="chip chip-off">⚫ Offline</span>
+                            <span th:if="${e.estado.name() == 'MAINTENANCE'}" class="chip chip-maint">🟡 Manutenção</span>
+                        </td>
+                        <td style="text-align:right;font-weight:700;" th:text="${e.sensores != null and !#lists.isEmpty(e.sensores)} ? ${e.sensores[0].ultimoValorLdr} : '—'">1820</td>
+                        <td>
+                            <span th:if="${e.sensores != null and !#lists.isEmpty(e.sensores) and e.sensores[0].laserDetectado}" style="color:#059669;font-weight:600;">Detectado</span>
+                            <span th:unless="${e.sensores != null and !#lists.isEmpty(e.sensores) and e.sensores[0].laserDetectado}" style="color:#DC2626;font-weight:600;">Interrompido</span>
+                        </td>
+                        <td th:text="${e.ultimoPulsoTexto}">—</td>
+                        <td th:text="${e.ultimaComunicacaoTexto}">—</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(esteiras)}">
+                        <td colspan="7" style="text-align:center;padding:20px;color:#64748B;">Nenhuma esteira monitorada.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TABELA DE EVENTOS (Req. 20) -->
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title">Tabela de Eventos da Esteira</div>
+                <span class="card-sub" id="eventosCountBadge">Histórico Persistido</span>
+            </div>
+            <div class="log-scroll">
+                <table class="log-table">
+                    <thead>
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>Esteira</th>
+                        <th>Evento</th>
+                        <th>Estado Anterior</th>
+                        <th>Novo Estado</th>
+                        <th>Duração</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tbEventosBody">
+                    <tr th:each="ev : ${eventos}">
+                        <td th:text="${ev.dataHoraInicio != null ? #temporals.format(ev.dataHoraInicio, 'dd/MM HH:mm:ss') : '—'}">10/05 12:00:00</td>
+                        <td style="font-weight:600;" th:text="${ev.esteiraNome}">Esteira 01</td>
+                        <td>
+                            <span style="font-weight:600;color:#2563EB;" th:text="${ev.tipoEvento}">START</span>
+                        </td>
+                        <td th:text="${ev.estadoAnterior}">STOPPED</td>
+                        <td th:text="${ev.novoEstado}">RUNNING</td>
+                        <td th:text="${ev.duracaoFormatada}">00:15</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(eventos)}">
+                        <td colspan="6" style="text-align:center;padding:20px;color:#64748B;">Nenhum evento registrado no banco.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ════ COLUNA 3: GAUGE + GRÁFICO LDR + ALERTAS (Req. 21) ════ -->
+    <div class="panel-right">
+
+        <!-- Gauge Nível de Risco -->
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title">Indicador de Risco</div>
+                <span class="card-sub">Nível Geral</span>
+            </div>
+            <div style="padding:16px;text-align:center;">
+                <div class="gauge-ring">
+                    <svg viewBox="0 0 130 130" width="120" height="120">
+                        <circle class="g-bg" cx="65" cy="65" r="60"/>
+                        <circle class="g-arc" id="garc" cx="65" cy="65" r="60"/>
+                    </svg>
+                    <div class="gauge-center">
+                        <div class="g-num" id="gnum" th:text="${nivelRiscoAtual}">0</div>
+                        <div class="g-unit">% Risco</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GRÁFICO HISTÓRICO DO SENSOR (Req. 21) -->
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title">Gráfico LDR × Tempo</div>
+                <div class="chart-ctrls">
+                    <button class="btn-period" onclick="mudarPeriodoGrafico('5m', this)">5m</button>
+                    <button class="btn-period active" onclick="mudarPeriodoGrafico('15m', this)">15m</button>
+                    <button class="btn-period" onclick="mudarPeriodoGrafico('1h', this)">1h</button>
+                    <button class="btn-period" onclick="mudarPeriodoGrafico('24h', this)">24h</button>
+                </div>
+            </div>
+            <div style="padding:14px;">
+                <canvas id="mc" style="width:100%;height:100px;"></canvas>
+                <div style="display:flex;justify-content:space-between;margin-top:6px;font-family:var(--font-mono);font-size:11px;color:#64748B;">
+                    <span>LDR Mín: <span id="ldrMin">--</span></span>
+                    <span>LDR Máx: <span id="ldrMax">--</span></span>
+                    <span style="color:#2563EB;">Atual: <span id="ldrCur">--</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alertas Recentes -->
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title">Alertas Recentes</div>
+                <span class="card-sub" th:text="${alertas != null ? #lists.size(alertas) : 0} + ' alerta(s)'">0</span>
+            </div>
+            <div class="log-scroll" style="max-height:220px;">
+                <table class="log-table">
+                    <tbody id="tbAlertasBody">
+                    <tr th:each="a : ${alertas}">
+                        <td style="white-space:nowrap;color:#64748B;" th:text="${a.dataHora != null ? #temporals.format(a.dataHora,'HH:mm:ss') : '—'}">12:00:00</td>
+                        <td th:text="${a.mensagem}">Mensagem</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(alertas)}">
+                        <td style="text-align:center;padding:16px;color:#64748B;">Nenhum alerta ativo.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</main>
+
+<script th:src="@{/js/dashboard.js}"></script>
+</body>
+</html>

@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDAE — Cadastro de Usuário</title>
+    <link
+            href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500&display=swap"
+            rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/sdae-base.css}">
+    <style>
+
+        
+
+        html {
+            font-size: 16.8px;
+            height: 100%;
+        }
+
+        body {
+            background: #F4F6FA;
+            color: #1A202C;
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            background-image:
+                    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(37, 99, 235, .07) 0%, transparent 60%),
+                    radial-gradient(ellipse 40% 40% at 80% 80%, rgba(16, 185, 129, .04) 0%, transparent 50%),
+                    linear-gradient(#E8EDF5 1px, transparent 1px),
+                    linear-gradient(90deg, #E8EDF5 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+        }
+
+        /* ── Partículas flutuantes de fundo ── */
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            background: rgba(33, 150, 243, 0.08);
+            border: 1px solid rgba(33, 150, 243, 0.12);
+            animation: float linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(110vh) rotate(0deg);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: .5;
+            }
+
+            100% {
+                transform: translateY(-10vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* ── Layout principal ── */
+        .page-wrap {
+            display: grid;
+            grid-template-columns: 1fr 520px;
+            width: 100%;
+            max-width: 1100px;
+            min-height: 100vh;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* ── Painel esquerdo — branding ── */
+        .brand-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px 64px;
+            position: relative;
+        }
+
+        .brand-panel::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 10%;
+            bottom: 10%;
+            width: 1px;
+            background: linear-gradient(to bottom,
+            transparent,
+            #D1DCF0 30%,
+            rgba(37, 99, 235, .35) 50%,
+            #D1DCF0 70%,
+            transparent);
+        }
+
+        .brand-logo-big {
+            width: 84px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--blue-600), var(--blue-400));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-serif);
+            font-weight: 700;
+            font-size: 26px;
+            color: #fff;
+            letter-spacing: 1px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.4), 0 0 80px rgba(0, 0, 0, 0.15);
+            margin-bottom: 36px;
+            animation: logoPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes logoPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 40px rgba(33, 150, 243, .4), 0 0 80px rgba(33, 150, 243, .15);
+            }
+
+            50% {
+                box-shadow: 0 0 60px rgba(33, 150, 243, .6), 0 0 100px rgba(33, 150, 243, .25);
+            }
+        }
+
+        .brand-headline {
+            font-family: var(--font-serif);
+            font-size: 42px;
+            font-weight: 700;
+            color: #0D1117;
+            line-height: 1.15;
+            letter-spacing: -.5px;
+            margin-bottom: 16px;
+        }
+
+        .brand-headline span {
+            color: var(--blue-300);
+        }
+
+        .brand-desc {
+            font-size: 15px;
+            line-height: 1.7;
+            color: #000000;
+            max-width: 400px;
+            margin-bottom: 48px;
+        }
+
+        /* ── Indicadores do sistema ── */
+        .sys-indicators {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .sys-ind {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            background: rgba(161, 162, 165, 0.897);
+            border: 1px solid #E8EDF5;
+            border-radius: 8px;
+            backdrop-filter: blur(8px);
+            transition: border-color .3s;
+        }
+
+        .sys-ind:hover {
+            border-color: #c1c1c2;
+        }
+
+        .sys-ind-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+
+        .si-green {
+            background: rgba(0, 200, 151, .1);
+            color: var(--emerald);
+            border: 1px solid rgba(0, 200, 151, .2);
+        }
+
+        .si-blue {
+            background: rgba(37, 99, 235, .08);
+            color: var(--blue-300);
+            border: 1px solid #D1DCF0;
+        }
+
+        .si-amber {
+            background: rgba(255, 162, 0, 0.1);
+            color: var(--amber);
+            border: 1px solid rgba(245, 158, 11, .2);
+        }
+
+        .sys-ind-text {
+            flex: 1;
+        }
+
+        .sys-ind-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #000000;
+        }
+
+        .sys-ind-sub {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: #000000;
+            margin-top: 2px;
+            letter-spacing: .5px;
+        }
+
+        .sys-ind-badge {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            padding: 3px 8px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+        }
+
+        .badge-online {
+            background: rgba(0, 200, 151, .1);
+            color: var(--emerald);
+            border: 1px solid rgba(0, 200, 151, .2);
+        }
+
+        .badge-active {
+            background: rgba(37, 99, 235, .08);
+            color: var(--blue-300);
+            border: 1px solid #D1DCF0;
+        }
+
+        /* ── Painel direito — formulário ── */
+        .register-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 48px 48px;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .register-header {
+            margin-bottom: 28px;
+        }
+
+        .register-title {
+            font-family: var(--font-serif);
+            font-size: 28px;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 6px;
+        }
+
+        .register-sub {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: #a4c5ff;
+            text-transform: uppercase;
+        }
+
+        /* ── Form ── */
+        .form-group {
+            margin-bottom: 18px;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+            color: #0278ff;
+            margin-bottom: 8px;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            color: #64748B;
+            pointer-events: none;
+        }
+
+        .form-input {
+            width: 100%;
+            height: 46px;
+            background: rgba(11, 23, 48, 0.8);
+            border: 1px solid #D1DCF0;
+            border-radius: 6px;
+            padding: 0 44px;
+            font-family: var(--font-sans);
+            font-size: 14px;
+            color: #f9fbff;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .form-input::placeholder {
+            color: #ffffff;
+        }
+
+        .form-input:focus {
+            border-color: var(--blue-400);
+            box-shadow: 0 0 0 3px rgba(194, 178, 178, 0.12);
+        }
+
+        .form-input.error {
+            border-color: var(--ruby);
+            box-shadow: 0 0 0 3px rgba(218, 75, 75, .12);
+        }
+
+        select.form-input {
+            padding-right: 14px;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2393C5FD' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+        }
+
+        select.form-input option {
+            background: #0b1730;
+            color: #f9fbff;
+        }
+
+        /* Dois campos lado a lado */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        /* Toggle senha */
+        .pw-toggle {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-family: var(--font-mono);
+            font-size: 9px;
+            letter-spacing: 1px;
+            color: #4c5057;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            transition: color .2s;
+        }
+
+        .pw-toggle:hover {
+            color: var(--blue-300);
+        }
+
+        /* Barra de força de senha */
+        .pw-strength {
+            margin-top: 8px;
+        }
+
+        .pw-strength-bar {
+            height: 3px;
+            border-radius: 2px;
+            background: #D1DCF0;
+            overflow: hidden;
+        }
+
+        .pw-strength-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 2px;
+            transition: width .4s, background .4s;
+        }
+
+        .pw-strength-text {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            letter-spacing: 1px;
+            color: #64748B;
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+
+        /* ── Mensagens de feedback ── */
+        .feedback-msg {
+            display: none;
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-bottom: 18px;
+            font-size: 13px;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feedback-msg.show {
+            display: flex;
+        }
+
+        .feedback-msg.error {
+            background: rgba(239, 68, 68, .1);
+            border: 1px solid rgba(239, 68, 68, .3);
+            color: #FCA5A5;
+            animation: shake .4s ease;
+        }
+
+        .feedback-msg.success {
+            background: rgba(16, 185, 129, .1);
+            border: 1px solid rgba(16, 185, 129, .3);
+            color: #6EE7B7;
+            animation: fadeIn .3s ease;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20%,
+            60% {
+                transform: translateX(-6px);
+            }
+
+            40%,
+            80% {
+                transform: translateX(6px);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-4px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ── Botão principal ── */
+        .btn-cadastrar {
+            width: 100%;
+            height: 48px;
+            background: linear-gradient(135deg, var(--blue-600), var(--blue-500));
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: var(--font-sans);
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: .5px;
+            transition: all .2s;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 14px;
+        }
+
+        .btn-cadastrar::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--blue-500), var(--blue-400));
+            opacity: 0;
+            transition: opacity .2s;
+        }
+
+        .btn-cadastrar:hover::before {
+            opacity: 1;
+        }
+
+        .btn-cadastrar:hover {
+            box-shadow: 0 0 30px rgba(33, 150, 243, .4);
+        }
+
+        .btn-cadastrar:active {
+            transform: scale(.98);
+        }
+
+        .btn-cadastrar.loading {
+            pointer-events: none;
+        }
+
+        .btn-text,
+        .btn-spinner {
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn-spinner {
+            display: none;
+        }
+
+        .btn-cadastrar.loading .btn-text {
+            display: none;
+        }
+
+        .btn-cadastrar.loading .btn-spinner {
+            display: inline;
+        }
+
+        /* Spinner */
+        .spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, .3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Link voltar ao login */
+        .back-link {
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: 1px;
+            color: #64748B;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .back-link a {
+            color: var(--blue-300);
+            text-decoration: none;
+            transition: color .2s;
+        }
+
+        .back-link a:hover {
+            color: var(--blue-400);
+            text-decoration: underline;
+        }
+
+        /* ── Rodapé do form ── */
+        .register-footer {
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 9px;
+            letter-spacing: 1.5px;
+            color: #006aff;
+            text-transform: uppercase;
+            border-top: 1px solid #E2E6EE;
+            padding-top: 16px;
+        }
+
+        /* ── Divisor de seção ── */
+        .section-divider {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #64748B;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            margin-top: 6px;
+        }
+
+        .section-divider::before,
+        .section-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #D1DCF0;
+        }
+
+        /* ── Responsivo ── */
+        @media (max-width: 768px) {
+            .page-wrap {
+                grid-template-columns: 1fr;
+            }
+
+            .brand-panel {
+                display: none;
+            }
+
+            .register-panel {
+                padding: 40px 28px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Partículas decorativas -->
+<div class="particle" style="width:80px;height:80px;left:10%;animation-duration:18s;animation-delay:0s"></div>
+<div class="particle" style="width:40px;height:40px;left:25%;animation-duration:22s;animation-delay:3s"></div>
+<div class="particle" style="width:120px;height:120px;left:60%;animation-duration:28s;animation-delay:1s"></div>
+<div class="particle" style="width:60px;height:60px;left:80%;animation-duration:16s;animation-delay:5s"></div>
+<div class="particle" style="width:30px;height:30px;left:45%;animation-duration:20s;animation-delay:8s"></div>
+
+<div class="page-wrap">
+
+    <!-- ══ PAINEL ESQUERDO ══ -->
+    <div class="brand-panel">
+        <div class="brand-logo-big">SDAE</div>
+
+        <h1 class="brand-headline">
+            Monitoramento<br>
+            <span>Inteligente</span><br>
+            de Esteiras
+        </h1>
+
+        <p class="brand-desc">
+            Acesso público ao SDAE. Ao se cadastrar, você receberá nível de acesso <strong>Operador</strong>.
+            Um administrador pode alterar seu nível após aprovação.
+        </p>
+
+        <div class="sys-indicators">
+            <div class="sys-ind">
+                <div class="sys-ind-icon si-green">⬤</div>
+                <div class="sys-ind-text">
+                    <div class="sys-ind-label">Cadastro Público</div>
+                    <div class="sys-ind-sub">Novo acesso com nível Operador</div>
+                </div>
+                <span class="sys-ind-badge badge-online">ABERTO</span>
+            </div>
+            <div class="sys-ind">
+                <div class="sys-ind-icon si-blue">◈</div>
+                <div class="sys-ind-text">
+                    <div class="sys-ind-label">Monitoramento em Tempo Real</div>
+                    <div class="sys-ind-sub">Dashboard com alertas automáticos</div>
+                </div>
+                <span class="sys-ind-badge badge-active">ATIVO</span>
+            </div>
+            <div class="sys-ind">
+                <div class="sys-ind-icon si-amber">⟳</div>
+                <div class="sys-ind-text">
+                    <div class="sys-ind-label">Acesso Restrito por Função</div>
+                    <div class="sys-ind-sub">Operador, Engenheiro, Administrador</div>
+                </div>
+                <span class="sys-ind-badge badge-online">SEGURO</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ PAINEL DIREITO — FORMULÁRIO DE CADASTRO ══ -->
+    <div class="register-panel">
+
+        <div class="register-header">
+            <div class="register-title">Cadastro de Usuário</div>
+            <div class="register-sub">SDAE · Novo Acesso</div>
+        </div>
+
+        <!-- Mensagem de erro vinda do backend -->
+        <div class="feedback-msg show error" th:if="${erro}" style="display:flex;">
+            <span id="feedbackIcon">⚠</span>
+            <span th:text="${erro}">Erro ao cadastrar.</span>
+        </div>
+
+        <!-- Mensagem de feedback JS -->
+        <div class="feedback-msg" id="feedbackMsg">
+            <span id="feedbackIcon">⚠</span>
+            <span id="feedbackText">Preencha todos os campos obrigatórios.</span>
+        </div>
+
+        <!-- FORMULÁRIO REAL — envia para /cadastro/salvar -->
+        <form id="formCadastro" th:action="@{/cadastro/salvar}" method="post">
+            <th:block th:replace="~{fragments/csrf :: token}"/>
+
+            <!-- SEÇÃO: Dados pessoais -->
+            <div class="section-divider">Dados Pessoais</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Nome</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">◈</span>
+                        <input type="text" class="form-input" id="fNome" name="nome"
+                               placeholder="Ex.: Carlos" autocomplete="given-name">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sobrenome</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">◈</span>
+                        <input type="text" class="form-input" id="fSobrenome" name="sobrenome"
+                               placeholder="Ex.: Silva" autocomplete="family-name">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">E-mail Corporativo</label>
+                <div class="input-wrap">
+                    <span class="input-icon">@</span>
+                    <input type="email" class="form-input" id="fEmail" name="email"
+                           placeholder="Ex.: carlos.silva@empresa.com" autocomplete="email">
+                </div>
+            </div>
+
+            <div class="form-group">
+                    <label class="form-label">Matrícula</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">#</span>
+                        <input type="text" class="form-input" id="fMatricula" name="matricula"
+                               placeholder="Ex.: OP001">
+                    </div>
+                </div>
+
+            <!-- SEÇÃO: Dados de acesso -->
+            <div class="section-divider">Dados de Acesso</div>
+
+            <div class="form-group">
+                <label class="form-label">Senha</label>
+                <div class="input-wrap">
+                    <span class="input-icon">●</span>
+                    <input type="password" class="form-input" id="fSenha" name="senha"
+                           placeholder="Mínimo 8 caracteres" autocomplete="new-password"
+                           oninput="avaliarSenha(this.value)">
+                    <button class="pw-toggle" type="button" onclick="togglePw('fSenha', this)">MOSTRAR</button>
+                </div>
+                <div style="margin-top:8px;">
+                    <div style="height:4px;background:#D1DCF0;border-radius:2px;">
+                        <div id="strengthFill" style="height:100%;width:0%;border-radius:2px;transition:all .3s;"></div>
+                    </div>
+                    <span id="strengthText" style="font-family:var(--font-mono);font-size:10px;color:#64748B;letter-spacing:1px;">— força da senha</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Confirmar Senha</label>
+                <div class="input-wrap">
+                    <span class="input-icon">●</span>
+                    <input type="password" class="form-input" id="fConfirmar"
+                           placeholder="Repita a senha" autocomplete="new-password">
+                    <button class="pw-toggle" type="button" onclick="togglePw('fConfirmar', this)">MOSTRAR</button>
+                </div>
+            </div>
+
+            <!-- Campos ocultos exigidos pelo backend -->
+            <input type="hidden" name="cargo"       id="hCargo" value="OPERADOR">
+            <input type="hidden" name="turno"       value="MANHA">
+            <input type="hidden" name="departamento" value="Geral">
+
+        </form>
+
+        <!-- Botão fora do form — JS valida antes de submeter -->
+        <button class="btn-cadastrar" id="btnCadastrar" onclick="fazerCadastro()">
+            <span class="btn-text">Criar Conta</span>
+            <span class="btn-spinner"><span class="spinner"></span></span>
+        </button>
+
+        <div class="back-link">
+            Já possui conta? <a th:href="@{/login}">Acessar o sistema</a>
+        </div>
+
+        <div class="register-footer">
+            SDAE - Sistema de Automação de Esteiras &nbsp;|&nbsp; SDAE
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ── Toggle visibilidade da senha ─────────────────────────────
+    function togglePw(inputId, btn) {
+        const inp = document.getElementById(inputId);
+        const show = inp.type === 'password';
+        inp.type = show ? 'text' : 'password';
+        btn.textContent = show ? 'OCULTAR' : 'MOSTRAR';
+    }
+
+    // ── Avaliador de força de senha ──────────────────────────────
+    function avaliarSenha(val) {
+        const fill = document.getElementById('strengthFill');
+        const text = document.getElementById('strengthText');
+        let score = 0;
+        if (val.length >= 8) score++;
+        if (/[A-Z]/.test(val)) score++;
+        if (/[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+        const configs = [
+            { pct: '0%',   color: '#D1DCF0', label: '— força da senha' },
+            { pct: '25%',  color: '#EF4444', label: 'FRACA' },
+            { pct: '50%',  color: '#F59E0B', label: 'MODERADA' },
+            { pct: '75%',  color: '#2196F3', label: 'BOA' },
+            { pct: '100%', color: '#10B981', label: 'FORTE' },
+        ];
+        const cfg = val.length === 0 ? configs[0] : configs[score];
+        fill.style.width = cfg.pct;
+        fill.style.background = cfg.color;
+        text.textContent = cfg.label;
+        text.style.color = val.length === 0 ? '#64748B' : cfg.color;
+    }
+
+    // ── Feedback visual ──────────────────────────────────────────
+    function mostrarFeedback(tipo, texto) {
+        const msg  = document.getElementById('feedbackMsg');
+        const icon = document.getElementById('feedbackIcon');
+        const txt  = document.getElementById('feedbackText');
+        msg.className = 'feedback-msg show ' + tipo;
+        icon.textContent = tipo === 'error' ? '⚠' : '✔';
+        txt.textContent  = texto;
+    }
+    function esconderFeedback() {
+        document.getElementById('feedbackMsg').className = 'feedback-msg';
+    }
+    function limparErros() {
+        document.querySelectorAll('.form-input.error').forEach(el => el.classList.remove('error'));
+    }
+    function marcarErro(id) {
+        document.getElementById(id)?.classList.add('error');
+    }
+
+    // ── Valida e submete o formulário real ───────────────────────
+    function fazerCadastro() {
+        esconderFeedback();
+        limparErros();
+
+        const nome      = document.getElementById('fNome').value.trim();
+        const sobrenome = document.getElementById('fSobrenome').value.trim();
+        const email     = document.getElementById('fEmail').value.trim();
+        const matricula = document.getElementById('fMatricula').value.trim();
+        const senha     = document.getElementById('fSenha').value;
+        const confirmar = document.getElementById('fConfirmar').value;
+
+        // Validações client-side
+        const erros = [];
+        if (!nome)      erros.push('fNome');
+        if (!sobrenome) erros.push('fSobrenome');
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) erros.push('fEmail');
+        if (!matricula) erros.push('fMatricula');
+        if (!senha || senha.length < 8) erros.push('fSenha');
+        if (senha !== confirmar) erros.push('fConfirmar');
+
+        if (erros.length > 0) {
+            erros.forEach(id => marcarErro(id));
+            let msg = 'Preencha todos os campos obrigatórios.';
+            if (erros.includes('fEmail'))    msg = 'Informe um e-mail corporativo válido.';
+            if (erros.includes('fSenha') && senha.length > 0 && senha.length < 8)
+                msg = 'A senha deve ter pelo menos 8 caracteres.';
+            if (erros.includes('fConfirmar') && confirmar.length > 0)
+                msg = 'As senhas não coincidem.';
+            mostrarFeedback('error', msg);
+            return;
+        }
+
+        const btn = document.getElementById('btnCadastrar');
+        btn.classList.add('loading');
+
+        document.getElementById('formCadastro').submit();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('fNome').focus();
+    });
+</script>
+<script th:src="@{/js/api.js}"></script>
+<script th:src="@{/js/sdae-forms.js}"></script>
+</body>
+
+</html>

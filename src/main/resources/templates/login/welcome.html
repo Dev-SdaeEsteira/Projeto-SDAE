@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SDAE — Sistema de Automação de Esteiras de Bauxita</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+    <style>
+        :root {
+            --bg:#F4F6FA; --white:#FFFFFF;
+            --accent:#2563EB; --accent-dark:#1565C0; --accent-light:#EFF4FF;
+            --text:#0D1117; --muted:#4A5568; --subtle:#A0AABB;
+            --border:rgba(37,99,235,0.12);
+            --cyan:#06B6D4; --emerald:#10B981; --amber:#F59E0B; --ruby:#EF4444;
+            --navy:#080F23; --navy2:#0C1E4A;
+            --fs:'Cormorant Garamond',Georgia,serif;
+            --fn:'DM Sans',system-ui,sans-serif;
+            --fm:'IBM Plex Mono',monospace;
+        }
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        html{scroll-behavior:smooth;font-size:16px}
+        body{font-family:var(--fn);background:var(--bg);color:var(--text);overflow-x:hidden}
+
+        /* ─── HEADER ─── */
+        header{
+            position:fixed;top:0;left:0;right:0;z-index:500;
+            height:68px;display:flex;align-items:center;justify-content:space-between;
+            padding:0 5vw;
+            background:rgba(8,15,35,0.92);
+            backdrop-filter:blur(20px);
+            border-bottom:1px solid rgba(37,99,235,0.2);
+            transition:all .3s;
+        }
+        .logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+        .logo-mark{
+            width:40px;height:40px;border-radius:9px;
+            background:linear-gradient(135deg,#1565C0,#2196F3);
+            display:flex;align-items:center;justify-content:center;
+            font-family:var(--fs);font-weight:700;font-size:14px;color:#fff;letter-spacing:.5px;
+            box-shadow:0 0 24px rgba(33,150,243,.45);
+        }
+        .logo-text{font-family:var(--fs);font-size:20px;font-weight:700;color:#fff;letter-spacing:-.3px}
+        .logo-text span{color:#60A5FA}
+        .logo-version{
+            font-family:var(--fm);font-size:9px;letter-spacing:.15em;
+            color:rgba(255,255,255,.3);border:1px solid rgba(37,99,235,.25);
+            padding:2px 7px;border-radius:4px;margin-left:4px;
+        }
+        nav{display:flex;align-items:center;gap:32px}
+        nav a{
+            font-family:var(--fm);font-size:11px;letter-spacing:.1em;
+            color:rgba(255,255,255,.4);text-decoration:none;text-transform:uppercase;
+            transition:color .2s
+        }
+        nav a:hover{color:rgba(96,165,250,.9)}
+        .header-cta{display:flex;gap:10px;align-items:center}
+
+        /* Buttons */
+        .btn{
+            font-family:var(--fn);font-size:13.5px;font-weight:500;
+            padding:9px 22px;border-radius:7px;cursor:pointer;
+            text-decoration:none;display:inline-flex;align-items:center;gap:7px;
+            transition:all .22s;letter-spacing:.01em;
+        }
+        .btn-ghost{
+            background:rgba(255,255,255,.06);color:rgba(255,255,255,.8);
+            border:1px solid rgba(255,255,255,.12);
+        }
+        .btn-ghost:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.22)}
+        .btn-primary{
+            background:linear-gradient(135deg,#1976D2,#2563EB);color:#fff;border:none;
+            box-shadow:0 4px 18px rgba(37,99,235,.4);
+        }
+        .btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(37,99,235,.5)}
+
+        /* ─── HERO ─── */
+        .hero{
+            position:relative;min-height:100vh;
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
+            overflow:hidden;
+            background:linear-gradient(160deg,#060E22 0%,#0A1833 45%,#0D2460 100%);
+        }
+        #three-canvas{
+            position:absolute;inset:0;width:100%;height:100%;
+            z-index:1;opacity:.75;
+        }
+        .hero-grid-overlay{
+            position:absolute;inset:0;z-index:2;
+            background-image:
+                    linear-gradient(rgba(37,99,235,.06) 1px,transparent 1px),
+                    linear-gradient(90deg,rgba(37,99,235,.06) 1px,transparent 1px);
+            background-size:56px 56px;
+            mask-image:radial-gradient(ellipse 80% 70% at 50% 50%,black 30%,transparent 80%);
+        }
+        .hero-content{
+            position:relative;z-index:10;
+            text-align:center;padding:120px 5vw 48px;
+            max-width:960px;
+        }
+        .hero-tag{
+            display:inline-flex;align-items:center;gap:9px;
+            background:rgba(37,99,235,.12);border:1px solid rgba(37,99,235,.3);
+            padding:7px 18px;border-radius:100px;margin-bottom:40px;
+            animation:fadeUp .7s ease both;
+        }
+        .tag-pulse{
+            width:8px;height:8px;border-radius:50%;background:#06B6D4;
+            animation:pulse 2s infinite;
+        }
+        @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(6,182,212,.4)}50%{opacity:.7;box-shadow:0 0 0 6px rgba(6,182,212,0)}}
+        .hero-tag span{
+            font-family:var(--fm);font-size:10.5px;letter-spacing:.18em;
+            color:rgba(255,255,255,.65);text-transform:uppercase;
+        }
+        .hero h1{
+            font-family:var(--fs);font-weight:700;
+            font-size:clamp(50px,8vw,96px);
+            line-height:1.0;letter-spacing:-2px;color:#fff;
+            margin-bottom:30px;animation:fadeUp .8s .1s ease both;
+        }
+        .hero h1 em{font-style:italic;color:#93C5FD}
+        .hero h1 .line2{display:block;font-size:clamp(36px,5vw,64px);color:rgba(255,255,255,.55);font-weight:400;letter-spacing:-1px}
+        .hero-sub{
+            font-size:clamp(14px,1.8vw,17px);font-weight:300;line-height:1.8;
+            color:rgba(255,255,255,.45);max-width:560px;margin:0 auto 52px;
+            animation:fadeUp .8s .2s ease both;
+        }
+        .hero-actions{
+            display:flex;gap:14px;justify-content:center;flex-wrap:wrap;
+            animation:fadeUp .8s .3s ease both;
+            margin-bottom:72px;
+        }
+        .btn-xl{
+            font-family:var(--fn);font-size:15px;font-weight:500;
+            padding:15px 36px;border-radius:10px;cursor:pointer;
+            text-decoration:none;display:inline-flex;align-items:center;gap:9px;
+            transition:all .25s;
+        }
+        .btn-xl.p{
+            background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;border:none;
+            box-shadow:0 6px 28px rgba(37,99,235,.5),0 0 0 1px rgba(255,255,255,.06) inset;
+        }
+        .btn-xl.p:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(37,99,235,.6)}
+        .btn-xl.s{
+            background:rgba(255,255,255,.06);color:rgba(255,255,255,.8);
+            border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(8px);
+        }
+        .btn-xl.s:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25)}
+        .btn-arrow{display:inline-block;transition:transform .2s}
+        .btn-xl.p:hover .btn-arrow{transform:translateX(4px)}
+
+        /* ─── 3D DASHBOARD (CSS Perspective) ─── */
+        .hero-3d-wrap{
+            position:relative;z-index:10;
+            perspective:1400px;width:100%;max-width:860px;
+            margin:0 auto;animation:fadeUp 1s .55s ease both;
+            padding:0 5vw 60px;
+        }
+        .scene3d{
+            transform:rotateX(18deg) rotateY(-4deg);
+            transform-style:preserve-3d;
+            position:relative;
+        }
+
+        /* Main panel */
+        .dash-main{
+            background:rgba(6,12,32,0.97);
+            border:1px solid rgba(37,99,235,.3);
+            border-radius:18px;padding:22px 24px 24px;
+            box-shadow:
+                    0 0 0 1px rgba(255,255,255,.04) inset,
+                    0 0 80px rgba(37,99,235,.12),
+                    0 60px 120px rgba(0,0,0,.7);
+            position:relative;overflow:hidden;
+        }
+        .dash-main::before{
+            content:'';position:absolute;top:0;left:0;right:0;height:1px;
+            background:linear-gradient(90deg,transparent,rgba(37,99,235,.7),rgba(6,182,212,.5),transparent);
+        }
+        .dm-header{
+            display:flex;align-items:center;justify-content:space-between;
+            margin-bottom:16px;
+        }
+        .dm-dots{display:flex;gap:6px}
+        .dd{width:10px;height:10px;border-radius:50%}
+        .d1{background:#FF5F57}.d2{background:#FEBC2E}.d3{background:#28C840}
+        .dm-title{
+            font-family:var(--fm);font-size:9.5px;letter-spacing:.18em;
+            color:rgba(255,255,255,.25);text-transform:uppercase;
+        }
+        .dm-live{
+            display:flex;align-items:center;gap:6px;
+            font-family:var(--fm);font-size:9px;letter-spacing:.12em;color:#10B981;
+        }
+        .live-dot{width:6px;height:6px;border-radius:50%;background:#10B981;animation:pulse 2s infinite}
+
+        /* Laser scan area */
+        .laser-area{
+            position:relative;height:130px;
+            background:rgba(0,0,0,.4);border-radius:10px;
+            border:1px solid rgba(37,99,235,.12);overflow:hidden;margin-bottom:16px;
+        }
+        .la-grid{
+            position:absolute;inset:0;
+            background-image:
+                    linear-gradient(rgba(37,99,235,.07) 1px,transparent 1px),
+                    linear-gradient(90deg,rgba(37,99,235,.07) 1px,transparent 1px);
+            background-size:20px 20px;
+        }
+        /* Bauxita profile SVG */
+        .belt-svg{position:absolute;bottom:0;left:0;right:0;height:70%}
+
+        /* Scan line (laser) */
+        .scan-beam{
+            position:absolute;top:0;bottom:0;width:2px;
+            background:linear-gradient(180deg,transparent 0%,rgba(239,68,68,.2) 20%,#EF4444 50%,rgba(239,68,68,.2) 80%,transparent 100%);
+            box-shadow:0 0 12px rgba(239,68,68,.9),0 0 30px rgba(239,68,68,.4);
+            animation:laserScan 2.8s cubic-bezier(0.45,0,0.55,1) infinite;
+        }
+        @keyframes laserScan{0%,100%{left:4%}50%{left:93%}}
+        .scan-trail{
+            position:absolute;top:0;bottom:0;width:60px;
+            background:radial-gradient(ellipse at 30% 50%,rgba(239,68,68,.07) 0%,transparent 70%);
+            animation:laserScan 2.8s cubic-bezier(0.45,0,0.55,1) infinite;
+            transform:translateX(-50%);
+        }
+
+        /* Belt stripe at bottom */
+        .belt-stripe{
+            position:absolute;bottom:0;left:0;right:0;height:22px;
+            background:linear-gradient(180deg,rgba(37,99,235,.05),rgba(37,99,235,.12));
+            border-top:1px solid rgba(37,99,235,.2);overflow:hidden;
+        }
+        .belt-stripe::after{
+            content:'';position:absolute;inset:0;
+            background:repeating-linear-gradient(90deg,transparent 0,transparent 16px,rgba(37,99,235,.12) 16px,rgba(37,99,235,.12) 18px);
+            animation:beltRoll 1.8s linear infinite;
+        }
+        @keyframes beltRoll{to{background-position:18px 0}}
+
+        /* Sensor indicator dots */
+        .sensor-row{
+            position:absolute;top:8px;left:50%;transform:translateX(-50%);
+            display:flex;gap:6px;align-items:center;
+        }
+        .s-pip{
+            width:7px;height:7px;border-radius:50%;
+            background:#06B6D4;box-shadow:0 0 10px #06B6D4;
+            animation:blink 1.4s infinite;
+        }
+        .s-pip:nth-child(2){animation-delay:.25s;background:#2563EB;box-shadow:0 0 10px #2563EB}
+        .s-pip:nth-child(3){animation-delay:.5s}
+        .s-label{font-family:var(--fm);font-size:8px;letter-spacing:.12em;color:rgba(255,255,255,.3);text-transform:uppercase}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+        /* Metrics row */
+        .metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+        .metric{
+            background:rgba(255,255,255,.03);
+            border:1px solid rgba(37,99,235,.1);border-radius:8px;padding:11px 13px;
+        }
+        .m-label{font-family:var(--fm);font-size:8.5px;letter-spacing:.1em;color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:5px}
+        .m-val{font-family:var(--fm);font-size:17px;font-weight:500;color:#fff;line-height:1}
+        .m-val.ok{color:#10B981}.m-val.warn{color:#F59E0B}.m-val.blue{color:#60A5FA}
+        .m-change{font-size:9px;color:rgba(255,255,255,.25);margin-top:3px;font-family:var(--fm)}
+
+        /* Floating side panels */
+        .fp{
+            position:absolute;
+            background:rgba(6,12,32,.95);
+            border:1px solid rgba(37,99,235,.22);border-radius:12px;
+            padding:16px 18px;backdrop-filter:blur(12px);
+            box-shadow:0 24px 60px rgba(0,0,0,.5),0 0 40px rgba(37,99,235,.08);
+            transform-style:preserve-3d;
+        }
+        .fp-l{
+            left:-90px;top:15%;width:170px;
+            transform:translateZ(50px) rotateY(10deg);
+            animation:fpFloat 4s ease-in-out infinite;
+        }
+        .fp-r{
+            right:-85px;top:35%;width:155px;
+            transform:translateZ(50px) rotateY(-10deg);
+            animation:fpFloat2 4.5s ease-in-out infinite .4s;
+        }
+        @keyframes fpFloat{0%,100%{transform:translateZ(50px) translateY(0) rotateY(10deg)}50%{transform:translateZ(50px) translateY(-9px) rotateY(10deg)}}
+        @keyframes fpFloat2{0%,100%{transform:translateZ(50px) translateY(0) rotateY(-10deg)}50%{transform:translateZ(50px) translateY(-7px) rotateY(-10deg)}}
+        .fp-eye{font-family:var(--fm);font-size:8.5px;letter-spacing:.12em;color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:8px}
+        .fp-big{font-family:var(--fs);font-size:30px;font-weight:700;color:#fff;line-height:1}
+        .fp-unit{font-family:var(--fm);font-size:10px;color:rgba(255,255,255,.35);margin-top:2px}
+        .fp-bar{height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-top:12px;overflow:hidden}
+        .fp-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#2563EB,#06B6D4);animation:fillAnim 2s 1.8s ease both}
+        @keyframes fillAnim{from{width:0}}
+        .fp-status{display:flex;align-items:center;gap:5px;margin-top:8px;font-family:var(--fm);font-size:9px;color:#10B981}
+        .fp-sdot{width:5px;height:5px;border-radius:50%;background:#10B981;animation:pulse 2s infinite}
+
+        /* ─── TICKER ─── */
+        .ticker{
+            background:rgba(5,10,28,.98);
+            border-top:1px solid rgba(37,99,235,.18);border-bottom:1px solid rgba(37,99,235,.18);
+            padding:10px 0;overflow:hidden;position:relative;z-index:20;
+        }
+        .ticker-track{
+            display:flex;gap:56px;
+            animation:tickerRoll 25s linear infinite;
+            width:max-content;white-space:nowrap;
+        }
+        @keyframes tickerRoll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+        .t-item{display:flex;align-items:center;gap:10px;font-family:var(--fm);font-size:10.5px;letter-spacing:.08em;color:rgba(255,255,255,.35)}
+        .t-key{color:rgba(96,165,250,.7)}
+        .t-val{color:rgba(255,255,255,.7);font-weight:500}
+        .t-ok{color:#10B981}.t-warn{color:#F59E0B}.t-sep{color:rgba(37,99,235,.4);font-size:16px}
+
+        /* ─── SECTION COMMON ─── */
+        .s-eye{
+            font-family:var(--fm);font-size:10.5px;letter-spacing:.18em;
+            color:var(--accent);text-transform:uppercase;
+            display:block;text-align:center;margin-bottom:12px;
+        }
+        .s-h{
+            font-family:var(--fs);font-weight:700;
+            font-size:clamp(30px,5vw,54px);
+            text-align:center;color:var(--text);letter-spacing:-.5px;line-height:1.1;
+            margin-bottom:14px;
+        }
+        .s-p{
+            text-align:center;font-size:15.5px;color:var(--muted);
+            font-weight:300;max-width:480px;margin:0 auto;line-height:1.8;
+        }
+
+        /* ─── FEATURES ─── */
+        .features{padding:96px 5vw;background:var(--bg)}
+
+        .feat-grid{
+            display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));
+            gap:18px;max-width:1120px;margin:64px auto 0;
+        }
+        .feat-card{
+            background:var(--white);border:1px solid rgba(37,99,235,.1);
+            border-radius:16px;padding:32px;
+            position:relative;overflow:hidden;
+            transition:transform .08s ease,box-shadow .3s;
+            cursor:default;
+        }
+        .feat-card:hover{box-shadow:0 24px 64px rgba(37,99,235,.1)}
+        .feat-card::after{
+            content:'';position:absolute;inset:0;pointer-events:none;
+            background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(37,99,235,.04) 0%,transparent 55%);
+        }
+        .feat-card::before{
+            content:'';position:absolute;top:0;left:0;right:0;height:1px;
+            background:linear-gradient(90deg,transparent,rgba(37,99,235,.5),transparent);
+            opacity:0;transition:opacity .3s;
+        }
+        .feat-card:hover::before{opacity:1}
+        .f-icon{
+            width:50px;height:50px;border-radius:13px;
+            display:flex;align-items:center;justify-content:center;margin-bottom:22px;
+        }
+        .f-icon svg{width:22px;height:22px}
+        .fi-b{background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.15)}
+        .fi-c{background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.15)}
+        .fi-g{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.15)}
+        .fi-a{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.15)}
+        .fi-r{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.15)}
+        .fi-v{background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.15)}
+        .feat-card h3{
+            font-family:var(--fs);font-size:22px;font-weight:700;
+            color:var(--text);margin-bottom:9px;letter-spacing:-.2px;
+        }
+        .feat-card p{font-size:14px;line-height:1.75;color:var(--muted);font-weight:300}
+        .feat-mono{
+            font-family:var(--fm);font-size:9.5px;letter-spacing:.1em;
+            color:rgba(37,99,235,.45);margin-top:16px;
+        }
+
+        /* ─── PROCESS ─── */
+        .process{
+            padding:96px 5vw;
+            background:linear-gradient(170deg,#07102A,#0C1E4A);
+            position:relative;overflow:hidden;
+        }
+        .process::before{
+            content:'';position:absolute;inset:0;
+            background-image:
+                    linear-gradient(rgba(37,99,235,.05) 1px,transparent 1px),
+                    linear-gradient(90deg,rgba(37,99,235,.05) 1px,transparent 1px);
+            background-size:48px 48px;
+        }
+        .process .s-h{color:#fff}
+        .process .s-p{color:rgba(255,255,255,.45)}
+        .process .s-eye{color:#60A5FA}
+
+        .proc-row{
+            display:grid;grid-template-columns:repeat(4,1fr);
+            max-width:1000px;margin:64px auto 0;
+            position:relative;gap:12px;
+        }
+        .proc-row::before{
+            content:'';position:absolute;
+            top:31px;left:calc(12.5% + 16px);right:calc(12.5% + 16px);
+            height:1px;
+            background:linear-gradient(90deg,#2563EB,#06B6D4,#2563EB);
+            z-index:0;
+        }
+        .proc-step{text-align:center;padding:0 12px;position:relative;z-index:1}
+        .proc-num{
+            width:62px;height:62px;border-radius:50%;
+            background:linear-gradient(135deg,#1565C0,#2563EB);
+            border:3px solid rgba(37,99,235,.3);
+            display:flex;align-items:center;justify-content:center;
+            margin:0 auto 22px;
+            box-shadow:0 0 0 8px rgba(37,99,235,.07),0 0 40px rgba(37,99,235,.35);
+            font-family:var(--fs);font-size:24px;font-weight:700;color:#fff;
+        }
+        .proc-step h4{
+            font-family:var(--fs);font-size:17px;font-weight:600;
+            color:#fff;margin-bottom:8px;letter-spacing:-.2px;
+        }
+        .proc-step p{
+            font-size:12.5px;color:rgba(255,255,255,.4);
+            line-height:1.7;font-weight:300;
+        }
+        .proc-tag{
+            display:inline-block;margin-top:12px;
+            font-family:var(--fm);font-size:9px;letter-spacing:.12em;
+            padding:3px 10px;border-radius:100px;text-transform:uppercase;
+        }
+        .pt-cyan{background:rgba(6,182,212,.12);color:#06B6D4;border:1px solid rgba(6,182,212,.2)}
+        .pt-blue{background:rgba(37,99,235,.12);color:#60A5FA;border:1px solid rgba(37,99,235,.2)}
+        .pt-amber{background:rgba(245,158,11,.12);color:#F59E0B;border:1px solid rgba(245,158,11,.2)}
+        .pt-green{background:rgba(16,185,129,.12);color:#10B981;border:1px solid rgba(16,185,129,.2)}
+
+        /* ─── STATUS ─── */
+        .status-s{padding:80px 5vw;background:var(--white)}
+        .status-grid{
+            display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));
+            gap:18px;max-width:1000px;margin:56px auto 0;
+        }
+        .st-card{
+            background:var(--bg);border:1px solid rgba(37,99,235,.09);
+            border-radius:14px;padding:22px;
+            transition:all .3s;
+        }
+        .st-card:hover{
+            border-color:rgba(37,99,235,.22);transform:translateY(-3px);
+            box-shadow:0 14px 44px rgba(37,99,235,.08);
+        }
+        .stc-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+        .stc-icon{
+            width:40px;height:40px;border-radius:10px;
+            display:flex;align-items:center;justify-content:center;font-size:17px;
+        }
+        .stc-label{font-size:14px;font-weight:500;color:var(--text)}
+        .stc-sub{font-family:var(--fm);font-size:9.5px;color:var(--subtle);letter-spacing:.04em;margin-top:1px}
+        .stc-badge{
+            margin-left:auto;font-family:var(--fm);font-size:9px;letter-spacing:.1em;
+            padding:3px 10px;border-radius:20px;
+        }
+        .sb-g{background:rgba(16,185,129,.1);color:#10B981;border:1px solid rgba(16,185,129,.2)}
+        .sb-b{background:rgba(37,99,235,.08);color:#2563EB;border:1px solid rgba(37,99,235,.2)}
+        .sb-a{background:rgba(245,158,11,.08);color:#F59E0B;border:1px solid rgba(245,158,11,.2)}
+        .stc-prog{height:3px;background:rgba(37,99,235,.08);border-radius:2px;margin-top:8px;overflow:hidden}
+        .stcp-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#2563EB,#06B6D4)}
+
+        /* ─── STATS BAND ─── */
+        .stats-band{
+            padding:64px 5vw;
+            background:linear-gradient(135deg,#0A1628,#0D2460);
+            position:relative;overflow:hidden;
+        }
+        .stats-band::before{
+            content:'';position:absolute;inset:0;
+            background:radial-gradient(ellipse 70% 80% at 50% 50%,rgba(37,99,235,.06) 0%,transparent 70%);
+        }
+        .stats-inner{
+            position:relative;max-width:960px;margin:0 auto;
+            display:grid;grid-template-columns:repeat(4,1fr);
+            gap:24px;text-align:center;
+        }
+        .stat-num{
+            font-family:var(--fs);font-weight:700;
+            font-size:clamp(36px,5vw,58px);
+            line-height:1;letter-spacing:-2px;margin-bottom:8px;
+        }
+        .stat-num span{
+            background:linear-gradient(135deg,#93C5FD,#fff);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+        }
+        .stat-desc{font-size:13px;color:rgba(255,255,255,.4);font-weight:300;letter-spacing:.02em}
+
+        /* ─── CTA ─── */
+        .cta-s{
+            padding:80px 5vw 100px;text-align:center;
+            position:relative;overflow:hidden;
+            background:var(--bg);
+        }
+        .cta-s::before{
+            content:'';position:absolute;top:-50%;left:50%;
+            transform:translate(-50%,0);
+            width:700px;height:700px;
+            background:radial-gradient(circle,rgba(37,99,235,.05) 0%,transparent 70%);
+        }
+        .cta-box{
+            position:relative;background:var(--white);
+            border:1px solid rgba(37,99,235,.15);border-radius:24px;
+            padding:72px 52px;max-width:700px;margin:0 auto;
+            box-shadow:0 24px 80px rgba(37,99,235,.07);overflow:hidden;
+        }
+        .cta-box::before{
+            content:'';position:absolute;top:0;left:0;right:0;height:2px;
+            background:linear-gradient(90deg,#1565C0,#2563EB,#06B6D4,#2563EB,#1565C0);
+            background-size:300%;animation:ctaS 4s linear infinite;
+        }
+        @keyframes ctaS{0%{background-position:0%}100%{background-position:300%}}
+        .cta-box h2{
+            font-family:var(--fs);font-weight:700;
+            font-size:clamp(28px,4.5vw,50px);
+            color:var(--text);letter-spacing:-.5px;margin-bottom:16px;line-height:1.1;
+        }
+        .cta-box p{
+            font-size:15.5px;color:var(--muted);font-weight:300;
+            line-height:1.8;margin-bottom:42px;
+        }
+        .cta-actions{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}
+
+        .btn-lg{
+            font-family:var(--fn);font-size:15px;font-weight:500;
+            padding:15px 36px;border-radius:10px;cursor:pointer;
+            text-decoration:none;display:inline-flex;align-items:center;gap:8px;
+            transition:all .25s;
+        }
+        .bl-p{
+            background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;border:none;
+            box-shadow:0 6px 26px rgba(37,99,235,.4);
+        }
+        .bl-p:hover{transform:translateY(-2px);box-shadow:0 12px 38px rgba(37,99,235,.55)}
+        .bl-s{
+            background:transparent;color:var(--accent);
+            border:1.5px solid rgba(37,99,235,.3);
+        }
+        .bl-s:hover{background:var(--accent-light)}
+
+        /* ─── FOOTER ─── */
+        footer{
+            background:#060E22;border-top:1px solid rgba(37,99,235,.15);
+            padding:36px 5vw;
+            display:flex;align-items:center;justify-content:space-between;
+            flex-wrap:wrap;gap:16px;
+        }
+        .foot-copy{font-family:var(--fm);font-size:10px;letter-spacing:.1em;color:rgba(255,255,255,.2)}
+        .foot-links{display:flex;gap:28px}
+        .foot-links a{
+            font-family:var(--fm);font-size:10px;letter-spacing:.1em;
+            color:rgba(255,255,255,.25);text-decoration:none;text-transform:uppercase;
+            transition:color .2s;
+        }
+        .foot-links a:hover{color:rgba(96,165,250,.7)}
+
+        /* ─── ANIMATIONS ─── */
+        @keyframes fadeUp{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:translateY(0)}}
+        .reveal{opacity:0;transform:translateY(26px);transition:opacity .75s ease,transform .75s ease}
+        .reveal.in{opacity:1;transform:translateY(0)}
+
+        /* ─── RESPONSIVE ─── */
+        @media(max-width:900px){
+            .proc-row{grid-template-columns:repeat(2,1fr)}
+            .proc-row::before{display:none}
+            .fp-l,.fp-r{display:none}
+            nav{display:none}
+            .stats-inner{grid-template-columns:repeat(2,1fr)}
+        }
+        @media(max-width:580px){
+            .hero h1{font-size:44px}
+            .proc-row{grid-template-columns:1fr}
+            .metrics-row{grid-template-columns:repeat(2,1fr)}
+            .stats-inner{grid-template-columns:repeat(2,1fr)}
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+    <a th:href="@{/welcome}" class="logo">
+        <div class="logo-mark">SDAE</div>
+        <span class="logo-version">v2.4</span>
+    </a>
+    <nav>
+        <a href="#features">Tecnologia</a>
+        <a href="#processo">Como Funciona</a>
+        <a href="#status">Sistema</a>
+        <a href="#sobre">Sobre</a>
+    </nav>
+    <div class="header-cta">
+        <a th:href="@{/login}" class="btn btn-ghost">Login</a>
+        <a th:href="@{/cadastro}" class="btn btn-primary">
+            Cadastro
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+    </div>
+</header>
+
+<!-- ══ HERO ══ -->
+<section class="hero">
+    <canvas id="three-canvas"></canvas>
+    <div class="hero-grid-overlay"></div>
+
+    <div class="hero-content">
+        <div class="hero-tag">
+            <div class="tag-pulse"></div>
+            <span>Sistema Operacional · Esteiras Ativas · 24/7</span>
+        </div>
+
+        <h1>
+            Inteligência<br>
+            <em>Laser</em> em<br>
+            <span class="line2">Tempo Real.</span>
+        </h1>
+
+        <p class="hero-sub">
+            Sensores de última geração monitoram o perfil da bauxita continuamente.
+            Qualquer desvio detectado dispara um alerta automático em tempo real,
+            preservando a operação e eliminando perdas.
+        </p>
+
+        <div class="hero-actions">
+            <a th:href="@{/login}" class="btn-xl p">
+                Login
+                <span class="btn-arrow">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </span>
+            </a>
+            <a th:href="@{/cadastro}" class="btn-xl s">Cadastro</a>
+        </div>
+    </div>
+
+    <!-- 3D DASHBOARD -->
+    <div class="hero-3d-wrap">
+        <div class="scene3d">
+
+            <!-- Floating left panel -->
+            <div class="fp fp-l">
+                <div class="fp-eye">Pistão</div>
+                <div class="fp-big">97<span style="font-size:16px;color:rgba(255,255,255,.4)">%</span></div>
+                <div class="fp-unit">Eficiência operacional</div>
+                <div class="fp-bar"><div class="fp-fill" style="width:97%"></div></div>
+                <div class="fp-status"><div class="fp-sdot"></div> ATIVO</div>
+            </div>
+
+            <!-- Main dashboard -->
+            <div class="dash-main">
+                <div class="dm-header">
+                    <div class="dm-dots">
+                        <div class="dd d1"></div><div class="dd d2"></div><div class="dd d3"></div>
+                    </div>
+                    <div class="dm-title">SDAE · Painel de Monitoramento · Esteira #3</div>
+                    <div class="dm-live"><div class="live-dot"></div> LIVE · 5s</div>
+                </div>
+
+                <!-- Laser scan visualization -->
+                <div class="laser-area">
+                    <div class="la-grid"></div>
+
+                    <!-- Bauxite profile (SVG path) -->
+                    <svg class="belt-svg" viewBox="0 0 800 100" preserveAspectRatio="none" style="position:absolute;bottom:22px;left:0;right:0;height:calc(100% - 22px)">
+                        <defs>
+                            <linearGradient id="bauxGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#2563EB" stop-opacity="0.35"/>
+                                <stop offset="100%" stop-color="#1D4ED8" stop-opacity="0.08"/>
+                            </linearGradient>
+                            <linearGradient id="bauxLine" x1="0" y1="0" x2="1" y2="0">
+                                <stop offset="0%" stop-color="#06B6D4" stop-opacity="0"/>
+                                <stop offset="20%" stop-color="#06B6D4" stop-opacity="0.7"/>
+                                <stop offset="50%" stop-color="#2563EB" stop-opacity="0.9"/>
+                                <stop offset="80%" stop-color="#06B6D4" stop-opacity="0.7"/>
+                                <stop offset="100%" stop-color="#06B6D4" stop-opacity="0"/>
+                            </linearGradient>
+                        </defs>
+                        <!-- Bauxite pile profile -->
+                        <path d="M0,100 L0,85 Q80,80 120,72 Q180,60 220,45 Q270,28 320,22 Q370,16 400,18 Q440,20 480,30 Q530,44 580,60 Q630,72 680,80 Q730,84 800,86 L800,100 Z" fill="url(#bauxGrad)"/>
+                        <!-- Top line (laser scanned surface) -->
+                        <path d="M0,85 Q80,80 120,72 Q180,60 220,45 Q270,28 320,22 Q370,16 400,18 Q440,20 480,30 Q530,44 580,60 Q630,72 680,80 Q730,84 800,86" fill="none" stroke="url(#bauxLine)" stroke-width="1.5"/>
+                        <!-- Data points on surface -->
+                        <circle cx="120" cy="72" r="2.5" fill="#06B6D4" opacity=".8"/>
+                        <circle cx="220" cy="45" r="2.5" fill="#06B6D4" opacity=".8"/>
+                        <circle cx="320" cy="22" r="3" fill="#2563EB" opacity="1"/>
+                        <circle cx="400" cy="18" r="3" fill="#60A5FA" opacity="1"/>
+                        <circle cx="480" cy="30" r="2.5" fill="#06B6D4" opacity=".8"/>
+                        <circle cx="580" cy="60" r="2.5" fill="#06B6D4" opacity=".8"/>
+                        <circle cx="680" cy="80" r="2" fill="#06B6D4" opacity=".6"/>
+                        <!-- Vertical laser lines from sensor -->
+                        <line x1="320" y1="0" x2="320" y2="22" stroke="#60A5FA" stroke-width=".6" stroke-dasharray="3,4" opacity=".4"/>
+                        <line x1="400" y1="0" x2="400" y2="18" stroke="#60A5FA" stroke-width=".6" stroke-dasharray="3,4" opacity=".4"/>
+                        <line x1="480" y1="0" x2="480" y2="30" stroke="#60A5FA" stroke-width=".6" stroke-dasharray="3,4" opacity=".4"/>
+                    </svg>
+
+                    <!-- Animated laser beam -->
+                    <div class="scan-beam"></div>
+                    <div class="scan-trail"></div>
+
+                    <!-- Belt -->
+                    <div class="belt-stripe"><div></div></div>
+
+                    <!-- Sensor row -->
+                    <div class="sensor-row">
+                        <div class="s-pip"></div>
+                        <div class="s-pip"></div>
+                        <div class="s-pip"></div>
+                        <span class="s-label" style="margin-left:4px">SENSOR LASER + LDR (ESP32)</span>
+                    </div>
+                </div>
+
+                <!-- Metrics -->
+                <div class="metrics-row">
+                    <div class="metric">
+                        <div class="m-label">Altura Pico</div>
+                        <div class="m-val blue">0.83<span style="font-size:10px;opacity:.5">m</span></div>
+                        <div class="m-change">↑ +0.03m / 5s</div>
+                    </div>
+                    <div class="metric">
+                        <div class="m-label">Desvio Lat.</div>
+                        <div class="m-val warn">12<span style="font-size:10px;opacity:.5">mm</span></div>
+                        <div class="m-change">Limite: 15mm</div>
+                    </div>
+                    <div class="metric">
+                        <div class="m-label">Pistão</div>
+                        <div class="m-val ok">STANDBY</div>
+                        <div class="m-change">Pronto</div>
+                    </div>
+                    <div class="metric">
+                        <div class="m-label">Uptime</div>
+                        <div class="m-val">99.9<span style="font-size:10px;opacity:.5">%</span></div>
+                        <div class="m-change">↑ 14 dias</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Floating right panel -->
+            <div class="fp fp-r">
+                <div class="fp-eye">Sensores</div>
+                <div class="fp-big">2<span style="font-size:13px;color:rgba(255,255,255,.4)">/2</span></div>
+                <div class="fp-unit">Online agora</div>
+                <div class="fp-bar"><div class="fp-fill" style="width:100%"></div></div>
+                <div class="fp-status"><div class="fp-sdot"></div> ONLINE</div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ══ TICKER ══ -->
+<div class="ticker">
+    <div class="ticker-track" id="ticker-inner">
+        <div class="t-item"><span class="t-key">SENSOR_01</span><span class="t-val">SICK LMS511</span><span class="t-ok">● ONLINE</span></div>
+        <div class="t-item t-sep">·</div>
+        <div class="t-item"><span class="t-key">ALTURA_PICO</span><span class="t-val">0.83m</span></div>
+        <div class="t-item t-sep">·</div>
+        <div class="t-item"><span class="t-key">DESVIO_LAT</span><span class="t-warn">12mm</span></div>
+        <div class="t-item t-sep">·</div>
+        <div class="t-item"><span class="t-key">PISTÃO</span><span class="t-val">STANDBY</span></div>
+        <div class="t-item t-sep">·</div>
+        <div class="t-item"><span class="t-key">SENSOR_02</span><span class="t-val">KEYENCE LJ-X8400</span><span class="t-ok">● ONLINE</span></div>
+        <div class="t-item t-sep">·</div>
+        <div class="t-item"><span class="t-key">UPTIME</span><span class="t-val">99.97%</span></div>
+        <div class="t-item t-sep">·</div>
+        <div class="t-item"><span class="t-key">ESTEIRA_#3</span><span class="t-val">OPERANDO</span></div>
+        <div class="t-item t-sep">·</div>
+        <div class="t-item"><span class="t-key">ÚLTIMA_DETECÇÃO</span><span class="t-val">14:32:07</span></div>
+        <div class="t-item t-sep">·</div>
+        <div class="t-item"><span class="t-key">ACCION.</span><span class="t-ok">0 hoje</span></div>
+        <div class="t-item t-sep">·</div>
+        <div class="t-item"><span class="t-key">SENSOR_01</span><span class="t-val">SICK LMS511</span><span class="t-ok">● ONLINE</span></div>
+        <div class="t-item t-sep">·</div>
+        <div class="t-item"><span class="t-key">ALTURA_PICO</span><span class="t-val">0.83m</span></div>
+        <div class="t-item t-sep">·</div>
+        <div class="t-item"><span class="t-key">DESVIO_LAT</span><span class="t-warn">12mm</span></div>
+        <div class="t-item t-sep">·</div>
+        <div class="t-item"><span class="t-key">PISTÃO</span><span class="t-val">STANDBY</span></div>
+        <div class="t-item t-sep">·</div>
+        <div class="t-item"><span class="t-key">SENSOR_02</span><span class="t-val">KEYENCE LJ-X8400</span><span class="t-ok">● ONLINE</span></div>
+        <div class="t-item t-sep">·</div>
+        <div class="t-item"><span class="t-key">UPTIME</span><span class="t-val">99.97%</span></div>
+        <div class="t-item t-sep">·</div>
+        <div class="t-item"><span class="t-key">ESTEIRA_#3</span><span class="t-val">OPERANDO</span></div>
+        <div class="t-item t-sep">·</div>
+        <div class="t-item"><span class="t-key">ÚLTIMA_DETECÇÃO</span><span class="t-val">14:32:07</span></div>
+        <div class="t-item t-sep">·</div>
+        <div class="t-item"><span class="t-key">ACCION.</span><span class="t-ok">0 hoje</span></div>
+    </div>
+</div>
+
+<!-- ══ FEATURES ══ -->
+<section class="features" id="features">
+    <span class="s-eye reveal">Tecnologia</span>
+    <h2 class="s-h reveal">Precisão ao nível<br>de milímetros.</h2>
+    <p class="s-p reveal">Cada componente foi escolhido para garantir detecção sem falhas e resposta imediata em ambiente industrial severo.</p>
+
+    <div class="feat-grid">
+        <div class="feat-card reveal" data-tilt>
+            <div class="f-icon fi-c">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="2"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                </svg>
+            </div>
+            <h3>Varredura Laser 3D</h3>
+            <p>Um sensor laser + LDR (Arduino/ESP32) mede a vibração e trepidação da esteira em tempo real (0–100%), disparando alertas automáticos quando os limites são ultrapassados.</p>
+            <div class="feat-mono">ESP32 · Laser + LDR · 0–100% Vibração</div>
+        </div>
+
+        <div class="feat-card reveal" style="transition-delay:.08s" data-tilt>
+            <div class="f-icon fi-r">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
+            </div>
+            <h3>Resposta em ms</h3>
+            <p>Detectado o desvio, um alerta automático é enviado ao operador — evitando desperdícios de material e garantindo continuidade operacional.</p>
+            <div class="feat-mono">Tempo de resposta &lt; 80ms</div>
+        </div>
+
+        <div class="feat-card reveal" style="transition-delay:.16s" data-tilt>
+            <div class="f-icon fi-g">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+            </div>
+            <h3>Dashboard em Tempo Real</h3>
+            <p>Visualize altura de pico, desvio lateral, histórico de acionamentos e estado de cada sensor com atualização a cada 5 segundos.</p>
+            <div class="feat-mono">WebSocket · atualização a 5s</div>
+        </div>
+
+        <div class="feat-card reveal" style="transition-delay:.04s" data-tilt>
+            <div class="f-icon fi-b">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+            </div>
+            <h3>Controle de Acesso</h3>
+            <p>Perfis com permissões diferenciadas: Administrador, Engenheiro, Técnico e Operador. Cada nível vê apenas o que é relevante para sua função.</p>
+            <div class="feat-mono">RBAC · JWT · Auditoria</div>
+        </div>
+
+        <div class="feat-card reveal" style="transition-delay:.12s" data-tilt>
+            <div class="f-icon fi-a">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>
+                </svg>
+            </div>
+            <h3>Alertas Inteligentes</h3>
+            <p>Notificações automáticas por e-mail e painel quando limites críticos são atingidos. Histórico completo de eventos e acionamentos.</p>
+            <div class="feat-mono">SMTP · Webhook · Log persistente</div>
+        </div>
+
+        <div class="feat-card reveal" style="transition-delay:.20s" data-tilt>
+            <div class="f-icon fi-v">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+            </div>
+            <h3>Industrial Grade</h3>
+            <p>Projetado para ambiente de mineração: operação 24/7, resistência a poeira de bauxita, variações de temperatura e vibração contínua.</p>
+            <div class="feat-mono">IP67 · -10°C / +60°C · IEC 61508</div>
+        </div>
+    </div>
+</section>
+
+<!-- ══ PROCESS ══ -->
+<section class="process" id="processo">
+    <div style="position:relative;z-index:1">
+        <span class="s-eye reveal">Como Funciona</span>
+        <h2 class="s-h reveal">Da detecção à ação,<br><em style="font-style:italic;color:#93C5FD">em milissegundos.</em></h2>
+        <p class="s-p reveal">Um ciclo fechado de monitoramento que não depende de intervenção humana para preservar a operação.</p>
+
+        <div class="proc-row">
+            <div class="proc-step reveal">
+                <div class="proc-num">1</div>
+                <h4>Varredura Laser</h4>
+                <p>O sensor emite pulsos laser a 50Hz, mapeando o perfil transversal da bauxita na esteira em 3D.</p>
+                <span class="proc-tag pt-cyan">50 Hz · Contínuo</span>
+            </div>
+            <div class="proc-step reveal" style="transition-delay:.12s">
+                <div class="proc-num">2</div>
+                <h4>Análise do Perfil</h4>
+                <p>O algoritmo compara o perfil medido com os parâmetros nominais e detecta qualquer desvio dimensional.</p>
+                <span class="proc-tag pt-blue">Edge Computing</span>
+            </div>
+            <div class="proc-step reveal" style="transition-delay:.24s">
+                <div class="proc-num">3</div>
+                <h4>Acionamento</h4>
+                <p>Se o desvio superar o limiar configurado, um alerta é ativado automaticamente em tempo real, com histórico e rastreabilidade.</p>
+                <span class="proc-tag pt-amber">&lt; 80ms resposta</span>
+            </div>
+            <div class="proc-step reveal" style="transition-delay:.36s">
+                <div class="proc-num">4</div>
+                <h4>Registro & Alerta</h4>
+                <p>O evento é registrado no banco com timestamp, snapshot do perfil e notificação enviada à equipe.</p>
+                <span class="proc-tag pt-green">Log Auditável</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══ STATUS ══ -->
+<section class="status-s" id="status">
+    <span class="s-eye reveal">Status do Sistema</span>
+    <h2 class="s-h reveal">Tudo sob controle,<br>sempre.</h2>
+    <p class="s-p reveal">Visibilidade completa sobre cada componente crítico da operação — em tempo real, sem ambiguidade.</p>
+
+    <div class="status-grid">
+        <div class="st-card reveal">
+            <div class="stc-head">
+                <div class="stc-icon" style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.15)">⬤</div>
+                <div>
+                    <div class="stc-label">Sensores Laser</div>
+                    <div class="stc-sub">ESP32 · Laser + LDR</div>
+                </div>
+                <span class="stc-badge sb-g">ONLINE</span>
+            </div>
+            <div class="stc-prog"><div class="stcp-fill" style="width:100%;background:linear-gradient(90deg,#10B981,#06D6A0)"></div></div>
+        </div>
+
+        <div class="st-card reveal" style="transition-delay:.1s">
+            <div class="stc-head">
+                <div class="stc-icon" style="background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.15)">◈</div>
+                <div>
+                    <div class="stc-label">Pistão Pneumático</div>
+                    <div class="stc-sub">Acionamento por desvio detectado</div>
+                </div>
+                <span class="stc-badge sb-b">STANDBY</span>
+            </div>
+            <div class="stc-prog"><div class="stcp-fill" style="width:97%"></div></div>
+        </div>
+
+        <div class="st-card reveal" style="transition-delay:.2s">
+            <div class="stc-head">
+                <div class="stc-icon" style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.15)">⟳</div>
+                <div>
+                    <div class="stc-label">Dashboard SDAE</div>
+                    <div class="stc-sub">Atualização a cada 5 segundos</div>
+                </div>
+                <span class="stc-badge sb-a">LIVE</span>
+            </div>
+            <div class="stc-prog"><div class="stcp-fill" style="width:100%;background:linear-gradient(90deg,#F59E0B,#FBBF24)"></div></div>
+        </div>
+
+        <div class="st-card reveal" style="transition-delay:.05s">
+            <div class="stc-head">
+                <div class="stc-icon" style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.15)">✦</div>
+                <div>
+                    <div class="stc-label">Servidor de Dados</div>
+                    <div class="stc-sub">Logs · Histórico · Relatórios</div>
+                </div>
+                <span class="stc-badge sb-g">ONLINE</span>
+            </div>
+            <div class="stc-prog"><div class="stcp-fill" style="width:99%;background:linear-gradient(90deg,#10B981,#06D6A0)"></div></div>
+        </div>
+
+        <div class="st-card reveal" style="transition-delay:.15s">
+            <div class="stc-head">
+                <div class="stc-icon" style="background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.15)">⧓</div>
+                <div>
+                    <div class="stc-label">Controle de Acesso</div>
+                    <div class="stc-sub">4 perfis · JWT autenticado</div>
+                </div>
+                <span class="stc-badge sb-b">ATIVO</span>
+            </div>
+            <div class="stc-prog"><div class="stcp-fill" style="width:100%"></div></div>
+        </div>
+
+        <div class="st-card reveal" style="transition-delay:.25s">
+            <div class="stc-head">
+                <div class="stc-icon" style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.15)">◉</div>
+                <div>
+                    <div class="stc-label">Sistema de Alertas</div>
+                    <div class="stc-sub">E-mail · Webhook · Dashboard</div>
+                </div>
+                <span class="stc-badge sb-g">ONLINE</span>
+            </div>
+            <div class="stc-prog"><div class="stcp-fill" style="width:98%;background:linear-gradient(90deg,#10B981,#06D6A0)"></div></div>
+        </div>
+    </div>
+</section>
+
+<!-- ══ STATS BAND ══ -->
+<div class="stats-band" id="sobre">
+    <div class="stats-inner">
+        <div class="stat-item reveal">
+            <div class="stat-num"><span>99.9%</span></div>
+            <div class="stat-desc">Uptime garantido pela operação</div>
+        </div>
+        <div class="stat-item reveal" style="transition-delay:.1s">
+            <div class="stat-num"><span>&lt;80ms</span></div>
+            <div class="stat-desc">Tempo de resposta de alerta</div>
+        </div>
+        <div class="stat-item reveal" style="transition-delay:.2s">
+            <div class="stat-num"><span>50Hz</span></div>
+            <div class="stat-desc">Taxa de varredura dos sensores</div>
+        </div>
+        <div class="stat-item reveal" style="transition-delay:.3s">
+            <div class="stat-num"><span>24/7</span></div>
+            <div class="stat-desc">Monitoramento contínuo, sem pausa</div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ CTA ══ -->
+<section class="cta-s" id="acesso">
+    <div class="cta-box reveal">
+        <h2>Pronto para acessar<br>o sistema?</h2>
+        <p>
+            Operadores, engenheiros e administradores — cada perfil entra com suas credenciais
+            e tem acesso ao painel completo do SDAE em tempo real.
+        </p>
+        <div class="cta-actions">
+            <a th:href="@{/login}" class="btn-lg bl-p">
+                Login
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+            <a th:href="@{/cadastro}" class="btn-lg bl-s">Cadastro</a>
+        </div>
+    </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+    <div>
+        <a th:href="@{/welcome}" class="logo" style="text-decoration:none">
+            <div class="logo-mark" style="width:32px;height:32px;font-size:11px">SD</div>
+            <span class="logo-text" style="font-size:17px">SDA<span>E</span></span>
+        </a>
+        <div class="foot-copy" style="margin-top:8px">© 2025 SDAE · Sistema de Detecção e Automação de Esteiras · v2.4.1</div>
+    </div>
+    <div class="foot-links">
+        <a href="#features">Tecnologia</a>
+        <a href="#processo">Como Funciona</a>
+        <a href="#sobre">Sobre o SDAE</a>
+        <a th:href="@{/login}">Acesso</a>
+    </div>
+</footer>
+
+<!-- Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+    /* ── THREE.JS: Conveyor Belt with Laser Sensors ── */
+    (function(){
+        const canvas = document.getElementById('three-canvas');
+        const W = canvas.clientWidth, H = canvas.clientHeight;
+        canvas.width = W; canvas.height = H;
+
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(W, H);
+        renderer.setClearColor(0x000000, 0);
+        renderer.shadowMap.enabled = true;
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, W/H, 0.1, 200);
+        camera.position.set(0, 7, 18);
+        camera.lookAt(0, 1, 0);
+
+        /* ── Lighting ── */
+        scene.add(new THREE.AmbientLight(0x1a2a4a, 0.8));
+        const dirLight = new THREE.DirectionalLight(0x4488ff, 0.6);
+        dirLight.position.set(5, 10, 5);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+        const pointLight1 = new THREE.PointLight(0xff2222, 1.5, 20);
+        pointLight1.position.set(-6, 3, 0);
+        scene.add(pointLight1);
+        const pointLight2 = new THREE.PointLight(0xff2222, 1.5, 20);
+        pointLight2.position.set(6, 3, 0);
+        scene.add(pointLight2);
+
+        /* ── Belt Frame ── */
+        const beltGroup = new THREE.Group();
+
+        // Belt surface (long flat box)
+        const beltGeo = new THREE.BoxGeometry(22, 0.22, 3);
+        const beltMat = new THREE.MeshPhongMaterial({ color: 0x1a2a3a, shininess: 20 });
+        const belt = new THREE.Mesh(beltGeo, beltMat);
+        belt.position.y = 0;
+        belt.receiveShadow = true;
+        beltGroup.add(belt);
+
+        // Belt stripes (moving pattern — we'll animate via texture offset)
+        const stripeCount = 30;
+        for(let i = 0; i < stripeCount; i++){
+            const stripeGeo = new THREE.BoxGeometry(0.12, 0.24, 3.1);
+            const stripeMat = new THREE.MeshPhongMaterial({ color: 0x233344, transparent: true, opacity: 0.7 });
+            const stripe = new THREE.Mesh(stripeGeo, stripeMat);
+            stripe.position.set(-11 + i * (22/stripeCount), 0.01, 0);
+            stripe.userData.stripeIndex = i;
+            beltGroup.add(stripe);
+        }
+
+        // Left roller
+        const rollerGeo = new THREE.CylinderGeometry(0.45, 0.45, 3.4, 16);
+        const rollerMat = new THREE.MeshPhongMaterial({ color: 0x334455, shininess: 60 });
+        const rollerL = new THREE.Mesh(rollerGeo, rollerMat);
+        rollerL.rotation.x = Math.PI / 2;
+        rollerL.position.set(-11, 0, 0);
+        beltGroup.add(rollerL);
+        // Right roller
+        const rollerR = rollerL.clone();
+        rollerR.position.set(11, 0, 0);
+        beltGroup.add(rollerR);
+
+        // Frame legs (side supports)
+        [-1.65, 1.65].forEach(z => {
+            [-8, -2, 4, 10].forEach(x => {
+                const legGeo = new THREE.BoxGeometry(0.18, 2.2, 0.18);
+                const legMat = new THREE.MeshPhongMaterial({ color: 0x222d3a });
+                const leg = new THREE.Mesh(legGeo, legMat);
+                leg.position.set(x, -1.1, z);
+                beltGroup.add(leg);
+            });
+        });
+
+        // Side rails
+        [-1.6, 1.6].forEach(z => {
+            const railGeo = new THREE.BoxGeometry(22, 0.15, 0.12);
+            const railMat = new THREE.MeshPhongMaterial({ color: 0x2a3a4a, shininess: 80 });
+            const rail = new THREE.Mesh(railGeo, railMat);
+            rail.position.set(0, 0.22, z);
+            beltGroup.add(rail);
+        });
+
+        beltGroup.position.y = 0.8;
+        scene.add(beltGroup);
+
+        /* ── Sensor Towers (laser emitters) ── */
+        const sensorPositions = [-5, 1, 7];
+        const sensorGroup = new THREE.Group();
+        const laserBeams = [];
+        const laserGlows = [];
+
+        sensorPositions.forEach(x => {
+            // Tower post
+            const postGeo = new THREE.BoxGeometry(0.2, 3.2, 0.2);
+            const postMat = new THREE.MeshPhongMaterial({ color: 0x1e3050, shininess: 40 });
+            const post = new THREE.Mesh(postGeo, postMat);
+            post.position.set(x, 2.5, -2.8);
+            sensorGroup.add(post);
+
+            // Sensor head
+            const headGeo = new THREE.BoxGeometry(0.55, 0.4, 0.55);
+            const headMat = new THREE.MeshPhongMaterial({ color: 0x0d1e30, emissive: 0x110000, shininess: 90 });
+            const head = new THREE.Mesh(headGeo, headMat);
+            head.position.set(x, 4.2, -2.5);
+            sensorGroup.add(head);
+
+            // Lens (red)
+            const lensGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.15, 12);
+            const lensMat = new THREE.MeshPhongMaterial({ color: 0xff2200, emissive: 0xff1100, emissiveIntensity: 1.5 });
+            const lens = new THREE.Mesh(lensGeo, lensMat);
+            lens.rotation.x = Math.PI / 2;
+            lens.position.set(x, 4.2, -2.2);
+            sensorGroup.add(lens);
+
+            // Laser beam (thin plane from sensor to belt)
+            const beamGeo = new THREE.PlaneGeometry(0.05, 3.5);
+            const beamMat = new THREE.MeshBasicMaterial({
+                color: 0xff1100,
+                transparent: true,
+                opacity: 0.7,
+                side: THREE.DoubleSide
+            });
+            const beam = new THREE.Mesh(beamGeo, beamMat);
+            beam.position.set(x, 2.7, -2.2);
+            beam.rotation.x = Math.PI / 2 - 0.18;
+            sensorGroup.add(beam);
+            laserBeams.push({ mesh: beam, mat: beamMat });
+
+            // Laser glow line (horizontal sweep line on belt)
+            const glowGeo = new THREE.PlaneGeometry(3.2, 0.04);
+            const glowMat = new THREE.MeshBasicMaterial({
+                color: 0xff2200,
+                transparent: true,
+                opacity: 0.9,
+                side: THREE.DoubleSide
+            });
+            const glow = new THREE.Mesh(glowGeo, glowMat);
+            glow.rotation.x = -Math.PI / 2;
+            glow.position.set(x, 1.11, 0);
+            sensorGroup.add(glow);
+            laserGlows.push({ mesh: glow, mat: glowMat });
+
+            // Laser hit particles (sparks effect)
+            const sparkGeo = new THREE.SphereGeometry(0.045, 6, 6);
+            const sparkMat = new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.85 });
+            [-1.2, -0.4, 0.4, 1.2].forEach(zo => {
+                const spark = new THREE.Mesh(sparkGeo, sparkMat);
+                spark.position.set(x, 1.15, zo);
+                spark.userData.baseY = 1.15;
+                spark.userData.offset = Math.random() * Math.PI * 2;
+                sensorGroup.add(spark);
+            });
+        });
+
+        sensorGroup.position.y = 0;
+        scene.add(sensorGroup);
+
+        /* ── Objects on belt ── */
+        const objects = [];
+        const objectColors = [0x8B4513, 0xA0522D, 0xCD853F, 0xD2691E, 0x6B3A2A, 0xC4703E];
+
+        function createBeltObject() {
+            const type = Math.floor(Math.random() * 3);
+            let geo, mat;
+            const color = objectColors[Math.floor(Math.random() * objectColors.length)];
+            mat = new THREE.MeshPhongMaterial({ color, shininess: 15 });
+
+            if(type === 0){
+                // Box (mineral block)
+                const w = 0.7 + Math.random() * 0.6;
+                const h = 0.4 + Math.random() * 0.5;
+                const d = 0.5 + Math.random() * 0.4;
+                geo = new THREE.BoxGeometry(w, h, d);
+            } else if(type === 1){
+                // Sphere (rounded mineral)
+                const r = 0.3 + Math.random() * 0.35;
+                geo = new THREE.SphereGeometry(r, 8, 8);
+            } else {
+                // Irregular chunk (scaled box)
+                geo = new THREE.BoxGeometry(
+                    0.5 + Math.random() * 0.7,
+                    0.3 + Math.random() * 0.45,
+                    0.55 + Math.random() * 0.5
+                );
+                // Slightly tilt it
+            }
+
+            const mesh = new THREE.Mesh(geo, mat);
+            const startX = 12 + Math.random() * 2;
+            const zPos = (Math.random() - 0.5) * 1.6;
+            const baseY = type === 1
+                ? 1.1 + (geo.parameters?.radius || 0.35)
+                : 1.1 + (geo.parameters?.height || 0.4) / 2;
+            mesh.position.set(startX, baseY, zPos);
+            mesh.rotation.y = Math.random() * Math.PI;
+            mesh.rotation.z = (Math.random() - 0.5) * 0.2;
+            mesh.castShadow = true;
+            mesh.userData = {
+                speed: 0.032 + Math.random() * 0.018,
+                baseY,
+                rotSpeed: (Math.random() - 0.5) * 0.01,
+                lit: false,
+                litTimer: 0
+            };
+            scene.add(mesh);
+            objects.push(mesh);
+            return mesh;
+        }
+
+        // Spawn initial objects
+        for(let i = 0; i < 8; i++){
+            const obj = createBeltObject();
+            obj.position.x = -10 + i * 3 + Math.random() * 2;
+        }
+
+        /* ── Ground / Floor ── */
+        const floorGeo = new THREE.PlaneGeometry(40, 30);
+        const floorMat = new THREE.MeshPhongMaterial({ color: 0x080f1a, shininess: 5 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -1.1;
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        /* ── Background particle field ── */
+        const bgCount = 60;
+        const bgGeo = new THREE.BufferGeometry();
+        const bgPos = new Float32Array(bgCount * 3);
+        for(let i = 0; i < bgCount; i++){
+            bgPos[i*3]   = (Math.random()-0.5)*28;
+            bgPos[i*3+1] = Math.random()*10 - 1;
+            bgPos[i*3+2] = (Math.random()-0.5)*14 - 4;
+        }
+        bgGeo.setAttribute('position', new THREE.BufferAttribute(bgPos, 3));
+        const bgMat = new THREE.PointsMaterial({ color: 0x2244aa, size: 0.06, transparent: true, opacity: 0.5 });
+        scene.add(new THREE.Points(bgGeo, bgMat));
+
+        /* ── Resize ── */
+        window.addEventListener('resize', ()=>{
+            const w = canvas.clientWidth, h = canvas.clientHeight;
+            camera.aspect = w/h; camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+        });
+
+        /* ── Animate ── */
+        let t = 0;
+        let lastSpawn = 0;                                                                                                 
+    })();
+
+    /* ── Scroll reveal ── */
+    const observer = new IntersectionObserver(entries=>{
+        entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); observer.unobserve(e.target); } });
+    }, {threshold:0.12});
+    document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+    /* ── Header scroll ── */
+    window.addEventListener('scroll', ()=>{
+        document.querySelector('header').style.boxShadow =
+            window.scrollY > 30 ? '0 4px 40px rgba(0,0,0,.4)' : 'none';
+    });
+
+    /* ── 3D Card Tilt ── */
+    document.querySelectorAll('[data-tilt]').forEach(card=>{
+        card.addEventListener('mousemove', e=>{
+            const r = card.getBoundingClientRect();
+            const x = (e.clientX - r.left) / r.width  - 0.5;
+            const y = (e.clientY - r.top)  / r.height - 0.5;
+            card.style.transform = `perspective(700px) rotateY(${x*10}deg) rotateX(${-y*8}deg) translateZ(4px)`;
+            card.style.setProperty('--mx', `${(x+0.5)*100}%`);
+            card.style.setProperty('--my', `${(y+0.5)*100}%`);
+        });
+        card.addEventListener('mouseleave', ()=>{
+            card.style.transform = '';
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDAE — Administração</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/sdae-base.css}">
+    <style>
+        
+        html{font-size:18px;}
+        body{background:#F4F6FA;color:#1A202C;font-family:var(--font-sans);min-height:100vh;
+            background-image:radial-gradient(ellipse 80% 40% at 50% -5%,rgba(255,255,255,.1) 0%,transparent 55%),
+            linear-gradient(#E8EDF5 1px,transparent 1px),linear-gradient(90deg,#E8EDF5 1px,transparent 1px);
+            background-size:100% 100%,48px 48px,48px 48px;}
+
+        
+
+        
+
+        
+
+        @keyframes pls{0%,100%{box-shadow:0 0 0 0 rgba(0,200,151,.5)}50%{box-shadow:0 0 0 5px rgba(0,200,151,0)}}
+        
+        main{padding:24px 28px 40px;max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:20px;}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+        /* PAGE HEADER */
+        .page-header{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid #E8EDF5;}
+        .page-title{font-family:var(--font-serif);font-size:31px;font-weight:700;color:#0A0E1A;}
+        .page-sub{font-family:var(--font-mono);font-size:12px;letter-spacing:2px;color:#4A5568;text-transform:uppercase;margin-top:4px;}
+
+        /* KPI BAR */
+        .kpi-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+        .kpi{background:white;border:1px solid #E8EDF5;border-radius:var(--r-md);padding:15px 17px;
+            display:flex;align-items:center;gap:13px;animation:fadeUp .5s ease both;}
+        .kpi:nth-child(1){animation-delay:.05s}.kpi:nth-child(2){animation-delay:.10s}
+        .kpi:nth-child(3){animation-delay:.15s}.kpi:nth-child(4){animation-delay:.20s}
+        .kpi-icon{width:40px;height:40px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+        .ki-blue{background:rgba(37,99,235,.08);color:var(--blue-300);border:1px solid #D1DCF0;}
+        .ki-red{background:rgba(239,68,68,.08);color:var(--ruby);border:1px solid rgba(239,68,68,.2);}
+        .ki-green{background:rgba(0,200,151,.08);color:var(--emerald);border:1px solid rgba(0,200,151,.2);}
+        .ki-amber{background:rgba(245,158,11,.08);color:var(--amber);border:1px solid rgba(245,158,11,.2);}
+        .kpi-val{font-family:var(--font-serif);font-size:30px;font-weight:700;color:#0A0E1A;line-height:1;}
+        .kpi-lbl{font-size:13px;font-weight:600;letter-spacing:.3px;color:#4A5568;margin-top:3px;text-transform:uppercase;}
+
+        /* CARD */
+        .card{background:#fff;border:1px solid #E8EDF5;border-radius:var(--r-md);overflow:hidden;animation:fadeUp .5s .1s ease both;}
+        .card-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 12px;border-bottom:1px solid #E8EDF5;}
+        .card-title{font-family:var(--font-serif);font-size:19px;font-weight:600;color:#0A0E1A;}
+        .card-sub{font-family:var(--font-mono);font-size:12px;color:#4A5568;letter-spacing:1px;text-transform:uppercase;}
+
+        /* TABLE */
+        table{width:100%;border-collapse:collapse;}
+        th{font-family:var(--font-mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+            color:#64748B;padding:10px 16px;border-bottom:1px solid #E8EDF5;text-align:left;white-space:nowrap;}
+        td{padding:11px 16px;border-bottom:1px solid #E8EDF5;color:#1A202C;font-size:15px;vertical-align:middle;}
+        tr:last-child td{border-bottom:none;}
+        tr:hover td{background:rgba(33,150,243,.03);}
+        .mono{font-family:var(--font-mono);font-size:13px;color:#4A5568;}
+
+        /* CHIPS */
+        .chip{font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:1px;
+            text-transform:uppercase;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+        .chip-admin{background:rgba(239,68,68,.1);color:var(--ruby);border:1px solid rgba(239,68,68,.25);}
+        .chip-eng{background:rgba(0,200,151,.1);color:var(--emerald);border:1px solid rgba(0,200,151,.25);}
+        .chip-op{background:rgba(37,99,235,.08);color:var(--blue-300);border:1px solid rgba(37,99,235,.2);}
+        .chip-tec{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2);}
+
+        /* ACCESS BADGE */
+        .access-badge{font-family:var(--font-mono);font-size:10px;font-weight:500;letter-spacing:1px;
+            text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid #D1DCF0;
+            color:#64748B;background:#F8FAFC;}
+
+        /* BUTTONS */
+        .btn{font-size:15px;font-weight:600;padding:9px 20px;border-radius:var(--r-sm);border:1px solid transparent;
+            cursor:pointer;transition:all .18s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+        .btn-blue{background:var(--blue-500);color:#fff;border-color:var(--blue-400);}
+        .btn-blue:hover{background:var(--blue-400);box-shadow:0 0 16px rgba(33,150,243,.35);}
+        .btn-ghost{background:#fff;color:#4A5568;border:1px solid #D1DCF0;}
+        .btn-ghost:hover{border-color:rgba(37,99,235,.35);color:var(--blue-300);}
+        .btn-sm{font-size:13px;padding:5px 12px;}
+        .btn-danger-sm{font-size:13px;padding:5px 12px;background:rgba(239,68,68,.1);color:var(--ruby);
+            border:1px solid rgba(239,68,68,.25);border-radius:var(--r-sm);cursor:pointer;text-decoration:none;
+            display:inline-flex;align-items:center;transition:all .15s;}
+        .btn-danger-sm:hover{background:rgba(239,68,68,.18);}
+        .actions-cell{display:flex;gap:6px;align-items:center;}
+
+        /* EMPTY */
+        .empty{text-align:center;padding:40px;color:#64748B;font-size:15px;}
+
+        /* SUCCESS / ERROR MSGS */
+        .success-msg{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);
+            border-radius:var(--r-sm);padding:10px 16px;color:#065F46;font-size:14px;margin-bottom:4px;}
+        .error-msg{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);
+            border-radius:var(--r-sm);padding:10px 16px;color:#991B1B;font-size:14px;margin-bottom:4px;}
+
+        footer{border-top:1px solid #E2E6EE;padding:12px 0;display:flex;justify-content:space-between;
+            font-family:var(--font-mono);font-size:11px;color:#64748B;}
+
+        /* ── RESPONSIVO (Melhoria 3) ── */
+        @media (max-width: 900px){
+            .kpi-bar{grid-template-columns:repeat(2,1fr);}
+            main{padding:16px;}
+            table{display:block;overflow-x:auto;white-space:nowrap;}
+        }
+        @media (max-width: 480px){
+            .kpi-bar{grid-template-columns:1fr;}
+        }
+    </style>
+</head>
+<body>
+
+<header th:replace="~{fragments/header :: header(paginaAtiva='admin')}"></header>
+
+<main>
+    <div class="page-header">
+        <div>
+            <div class="page-title">Administração</div>
+            <!-- CORRIGIDO: dados reais -->
+            <div class="page-sub" th:text="${#lists.size(funcionarios)} + ' funcionários cadastrados'">0 registros</div>
+        </div>
+        <a href="/admin/novo" class="btn btn-blue">+ Novo Funcionário</a>
+    </div>
+
+    <!-- Mensagens de feedback -->
+    <div th:if="${param.sucesso}" class="success-msg">✓ Operação realizada com sucesso!</div>
+    <div th:if="${param.erro}"    class="error-msg">⚠ Erro ao salvar. Verifique os dados.</div>
+
+    <!-- KPI BAR — dados reais do controller -->
+    <div class="kpi-bar">
+        <div class="kpi">
+            <div class="kpi-icon ki-blue">👥</div>
+            <div>
+                <div class="kpi-val" th:text="${#lists.size(funcionarios)}">0</div>
+                <div class="kpi-lbl">Total</div>
+            </div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-icon ki-red">🔑</div>
+            <div>
+                <div class="kpi-val" th:text="${totalAdmin}">0</div>
+                <div class="kpi-lbl">Administradores</div>
+            </div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-icon ki-green">⚙</div>
+            <div>
+                <div class="kpi-val" th:text="${totalEng}">0</div>
+                <div class="kpi-lbl">Engenheiros</div>
+            </div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-icon ki-amber">👷</div>
+            <div>
+                <div class="kpi-val" th:text="${totalOperador}">0</div>
+                <div class="kpi-lbl">Operadores</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABELA DE FUNCIONÁRIOS — dados reais via th:each -->
+    <div class="card">
+        <div class="card-head">
+            <div>
+                <div class="card-title">Funcionários Cadastrados</div>
+                <div class="card-sub" th:text="${#lists.size(funcionarios)} + ' registros'">0 registros</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <input type="text" id="buscaFuncionario" placeholder="Buscar por nome ou matrícula..."
+                       style="font-family:var(--font-sans);font-size:13px;padding:7px 12px;border:1px solid var(--border);border-radius:20px;width:220px;background:var(--bg);color:var(--text);">
+                <a href="/admin/novo" class="btn btn-ghost btn-sm">+ Novo</a>
+            </div>
+        </div>
+
+        <div id="buscaSemResultado" class="empty" style="display:none;">
+            Nenhum funcionário encontrado para essa busca.
+        </div>
+
+        <div th:if="${#lists.isEmpty(funcionarios)}" class="empty">
+            Nenhum funcionário cadastrado. <a href="/admin/novo" style="color:var(--blue-300);">Cadastrar agora →</a>
+        </div>
+
+        <table th:unless="${#lists.isEmpty(funcionarios)}">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Nome</th>
+                <th>Matrícula</th>
+                <th>E-mail</th>
+                <th>Cargo</th>
+                <th>Nível Acesso</th>
+                <th>Turno</th>
+                <th>Departamento</th>
+                <th>Ações</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="f : ${funcionarios}"
+                th:attr="data-nome=${#strings.toLowerCase(f.nome)}, data-matricula=${f.matricula != null ? #strings.toLowerCase(f.matricula) : ''}">
+                <td class="mono" th:text="${f.id}">#</td>
+                <td th:text="${f.nome}">—</td>
+                <td class="mono" th:text="${f.matricula != null ? f.matricula : '—'}">—</td>
+                <td class="mono" th:text="${f.email != null ? f.email : '—'}">—</td>
+                <td>
+                        <span class="chip"
+                              th:classappend="${f.cargo == 'ADMINISTRADOR'} ? 'chip-admin' : (${f.cargo == 'ENGENHEIRO'} ? 'chip-eng' : (${f.cargo == 'TECNICO'} ? 'chip-tec' : 'chip-op'))"
+                              th:text="${f.cargo != null ? f.cargo : '—'}">—</span>
+                </td>
+                <!-- CORRIGIDO: coluna nivelAcesso que estava faltando -->
+                <td>
+                    <span class="access-badge" th:text="${f.nivelAcesso != null ? f.nivelAcesso : f.cargo}">—</span>
+                </td>
+                <td th:text="${f.turno != null ? f.turno : '—'}">—</td>
+                <td class="mono" th:text="${f.departamento != null ? f.departamento : '—'}">—</td>
+                <td>
+                    <div class="actions-cell">
+                        <a th:href="@{/admin/editar/{id}(id=${f.id})}" class="btn btn-ghost btn-sm">✏ Editar</a>
+                        <!-- CORRIGIDO (S5): exclusão agora é POST, não GET -->
+                        <form th:action="@{/admin/deletar/{id}(id=${f.id})}" method="post"
+                              style="display:inline;margin:0;">
+                            <th:block th:replace="~{fragments/csrf :: token}"/>
+                            <button type="submit" class="btn-danger-sm sdae-confirm-delete"
+                                    data-confirm-titulo="Excluir funcionário?"
+                                    data-confirm-mensagem="Esta ação não pode ser desfeita.">✕</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <footer>
+        <span>SDAE — Sistema de Automação de Esteiras &nbsp;|&nbsp; Administração</span>
+        <span id="fdate">—</span>
+    </footer>
+</main>
+
+<script>
+    setInterval(() => {
+        document.getElementById('clk').textContent = new Date().toLocaleTimeString('pt-BR');
+    }, 1000);
+    (()=>{
+        const el = document.getElementById('fdate');
+        if (el) el.textContent = new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'long', year:'numeric'});
+    })();
+
+    // Melhoria 6: busca por nome/matrícula na tabela de funcionários
+    (() => {
+        const campoBusca = document.getElementById('buscaFuncionario');
+        if (!campoBusca) return;
+
+        const linhas = document.querySelectorAll('table tbody tr');
+        const avisoVazio = document.getElementById('buscaSemResultado');
+
+        campoBusca.addEventListener('input', () => {
+            const termo = campoBusca.value.trim().toLowerCase();
+            let algumVisivel = false;
+
+            linhas.forEach(linha => {
+                const nome = linha.dataset.nome || '';
+                const matricula = linha.dataset.matricula || '';
+                const bateu = nome.includes(termo) || matricula.includes(termo);
+                linha.style.display = bateu ? '' : 'none';
+                if (bateu) algumVisivel = true;
+            });
+
+            if (avisoVazio) {
+                avisoVazio.style.display = (!algumVisivel && termo !== '') ? 'block' : 'none';
+            }
+        });
+    })();
+</script>
+<script th:src="@{/js/crud.js}"></script>
+<th:block th:replace="~{fragments/sdae-scripts :: bundle('admin.js')}"></th:block>
+<script th:src="@{/js/sdae-forms.js}"></script>
+</body>
+</html>

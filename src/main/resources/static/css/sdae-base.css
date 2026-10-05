@@ -1,0 +1,152 @@
+/* =========================================================
+   SDAE — sdae-base.css
+   =========================================================
+   Estilos e variáveis compartilhados por TODAS as páginas
+   internas do sistema (dashboard, esteiras, sensores,
+   relatórios, administração e telas de cadastro/edição).
+
+   Antes: cada página tinha o mesmo bloco de :root e os
+   mesmos estilos de header copiados e colados.
+   Agora: um arquivo só, importado em todas as páginas.
+
+   Como usar em cada página:
+       <link rel="stylesheet" th:href="@{/css/sdae-base.css}">
+   ========================================================= */
+
+/* ---------- Paleta / Design tokens ---------- */
+:root{
+    --bg:#F4F6FA;--surface:#FFFFFF;--border:#E2E6EE;--border-focus:#2563EB;--text:#0D1117;--muted:#4A5568;
+    --subtle:#A0AABB;--accent:#2563EB;--accent-bg:#EFF4FF;--success:#10B981;--success-bg:#EDFAF5;
+    --danger:#EF4444;--danger-bg:#FEF2F2;--warn:#F59E0B;--warn-bg:#FFFBEB;--violet:#7C3AED;
+    --violet-bg:#F5F3FF;--emerald:#10B981;--ruby:#EF4444;--amber:#F59E0B;--cyan:#06B6D4;
+    --blue-600:#1565C0;--blue-500:#1976D2;--blue-400:#2196F3;--blue-300:#1D4ED8;--blue-200:#93C5FD;
+    --blue-glow:rgba(37,99,235,.12);--blue-soft:rgba(37,99,235,.08);
+    --text-100:#0A0E1A;--text-200:#1A202C;--text-400:#4A5568;--text-600:#64748B;
+    --border-dim:rgba(37,99,235,.08);--border-mid:rgba(37,99,235,.16);--border-bright:rgba(37,99,235,.35);
+    --navy-950:#F4F6FA;--navy-900:#F8FAFC;--navy-800:#FFFFFF;--navy-700:#F0F4FF;
+    --navy-600:#E0E8FF;--navy-500:#C7D7F8;
+    --font-serif:'Cormorant Garamond',Georgia,serif;
+    --font-sans:'DM Sans',system-ui,sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    --r-sm:4px;--r-md:8px;--r:8px;--r-lg:12px;
+    --shadow:0 1px 4px rgba(0,0,0,.06),0 0 0 1px var(--border);
+}
+
+/* ---------- Reset básico ---------- */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{
+    font-family:var(--font-sans);
+    background:var(--bg);
+    color:var(--text);
+}
+
+/* ---------- Header (usado pelo fragmento fragments/header.html) ---------- */
+header{
+    position:sticky;top:0;z-index:200;height:58px;
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    padding:0 24px;
+}
+.brand{display:flex;align-items:center;gap:14px;}
+.brand-logo{
+    width:34px;height:34px;border-radius:var(--r-md);
+    background:var(--accent);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-serif);font-weight:700;font-size:14px;
+}
+.brand-name{font-weight:700;font-size:15px;color:var(--text-200);}
+
+.header-nav{display:flex;gap:6px;}
+.nav-pill{
+    font-size:15px;font-weight:500;padding:5px 14px;border-radius:20px;
+    color:var(--text-400);text-decoration:none;cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+}
+.nav-pill:hover{background:var(--accent-bg);color:var(--accent);}
+.nav-pill.active{background:var(--accent);color:#fff;}
+
+.header-right{display:flex;align-items:center;gap:16px;}
+.sys-badge{
+    display:flex;align-items:center;gap:6px;
+    font-size:12px;font-weight:500;color:var(--success);
+    background:var(--success-bg);padding:4px 10px;border-radius:20px;
+}
+.pulse-dot{
+    width:7px;height:7px;border-radius:50%;background:var(--success);
+    animation:pulse 1.6s infinite;
+}
+@keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(16,185,129,.5);}
+    70%{box-shadow:0 0 0 6px rgba(16,185,129,0);}
+    100%{box-shadow:0 0 0 0 rgba(16,185,129,0);}
+}
+.clock{font-family:var(--font-mono);font-size:13px;color:var(--text-400);}
+
+/* ---------- Responsividade (Melhoria 3) ---------- */
+@media (max-width: 1024px){
+    .header-nav{gap:2px;}
+    .nav-pill{font-size:13px;padding:5px 10px;}
+}
+
+@media (max-width: 768px){
+    header{
+        flex-wrap:wrap;
+        height:auto;
+        padding:10px 16px;
+        gap:10px;
+    }
+    .header-nav{
+        order:3;
+        width:100%;
+        justify-content:space-between;
+        overflow-x:auto;
+    }
+    .header-right{gap:10px;}
+    .clock{display:none;}
+}
+
+@media (max-width: 480px){
+    .brand-name{display:none;}
+    .nav-pill{font-size:11.5px;padding:4px 8px;}
+    .sys-badge{display:none;}
+}
+
+/* ---------- Modal de confirmação (Melhoria 5) ---------- */
+.sdae-modal-overlay{
+    position:fixed;inset:0;background:rgba(13,17,23,.55);
+    display:flex;align-items:center;justify-content:center;
+    z-index:1000;opacity:0;pointer-events:none;
+    transition:opacity .15s ease;
+}
+.sdae-modal-overlay.aberto{opacity:1;pointer-events:auto;}
+.sdae-modal{
+    background:var(--surface);border-radius:var(--r-lg);
+    padding:24px;width:100%;max-width:360px;
+    box-shadow:0 20px 40px rgba(0,0,0,.2);
+    transform:translateY(10px);transition:transform .15s ease;
+}
+.sdae-modal-overlay.aberto .sdae-modal{transform:translateY(0);}
+.sdae-modal h3{font-size:16px;color:var(--text-200);margin-bottom:8px;}
+.sdae-modal p{font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.5;}
+.sdae-modal-actions{display:flex;gap:10px;justify-content:flex-end;}
+.sdae-modal-actions button{
+    font-family:var(--font-sans);font-size:13px;font-weight:600;
+    padding:8px 16px;border-radius:var(--r-md);border:none;cursor:pointer;
+}
+.sdae-modal-btn-cancelar{background:var(--bg);color:var(--text-400);}
+.sdae-modal-btn-cancelar:hover{background:var(--border);}
+.sdae-modal-btn-confirmar{background:var(--danger);color:#fff;}
+.sdae-modal-btn-confirmar:hover{background:#DC2626;}
+
+/* ---------- Botão com loading (Melhoria 4) ---------- */
+.btn-loading{position:relative;pointer-events:none;opacity:.75;color:transparent!important;}
+.btn-loading::after{
+    content:"";
+    position:absolute;top:50%;left:50%;
+    width:16px;height:16px;margin:-8px 0 0 -8px;
+    border:2px solid rgba(255,255,255,.5);
+    border-top-color:#fff;border-radius:50%;
+    animation:girar .6s linear infinite;
+}
+@keyframes girar{to{transform:rotate(360deg);}}

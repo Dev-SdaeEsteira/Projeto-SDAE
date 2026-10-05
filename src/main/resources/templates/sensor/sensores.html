@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDAE — Sensores</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/sdae-base.css}">
+    <style>
+
+        html{font-size:18px;}
+        body{background:#F4F6FA;color:#1A202C;font-family:var(--font-sans);min-height:100vh;overflow-x:hidden;
+            background-image:radial-gradient(ellipse 80% 40% at 50% -5%,rgba(255,255,255,0.1) 0%,transparent 55%),
+            linear-gradient(#E8EDF5 1px,transparent 1px),linear-gradient(90deg,#E8EDF5 1px,transparent 1px);
+            background-size:100% 100%,48px 48px,48px 48px;}
+        ::-webkit-scrollbar{width:5px;height:5px;}
+        ::-webkit-scrollbar-track{background:#F4F6FA;}
+        ::-webkit-scrollbar-thumb{background:#C7D7F8;border-radius:3px;}
+
+        /* HEADER */
+
+        
+
+        
+
+        
+
+        
+        @keyframes pls{0%,100%{box-shadow:0 0 0 0 rgba(0,200,151,.5);}50%{box-shadow:0 0 0 5px rgba(0,200,151,0);}}
+
+        /* MAIN */
+        main{padding:24px 28px 32px;max-width:1600px;margin:0 auto;display:flex;flex-direction:column;gap:20px;}
+        .page-header{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid #E8EDF5;}
+        .page-title{font-family:var(--font-serif);font-size:31.2px;font-weight:700;color:#0A0E1A;}
+        .page-sub{font-family:var(--font-mono);font-size:12px;letter-spacing:2px;color:#4A5568;text-transform:uppercase;margin-top:4px;}
+
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+        /* KPI BAR */
+        .kpi-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+        .kpi{background:white;border:1px solid #E8EDF5;border-radius:var(--r-md);padding:15px 17px;
+            display:flex;align-items:center;gap:13px;transition:border-color .25s,box-shadow .25s;animation:fadeUp .5s ease both;}
+        .kpi:nth-child(1){animation-delay:.05s}.kpi:nth-child(2){animation-delay:.10s}.kpi:nth-child(3){animation-delay:.15s}
+        .kpi:nth-child(4){animation-delay:.20s}.kpi:nth-child(5){animation-delay:.25s}
+        .kpi:hover{border-color:rgba(37,99,235,.35);box-shadow:0 0 20px rgba(37,99,235,.08);}
+        .kpi-icon{width:42px;height:42px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:21.6px;flex-shrink:0;}
+        .ki-blue{background:rgba(37,99,235,.08);color:var(--blue-300);border:1px solid #D1DCF0;}
+        .ki-green{background:rgba(0,200,151,.08);color:var(--emerald);border:1px solid rgba(0,200,151,.2);}
+        .ki-red{background:rgba(239,68,68,.08);color:var(--ruby);border:1px solid rgba(239,68,68,.2);}
+        .ki-amber{background:rgba(245,158,11,.08);color:var(--amber);border:1px solid rgba(245,158,11,.2);}
+        .ki-cyan{background:rgba(6,182,212,.08);color:var(--cyan);border:1px solid rgba(6,182,212,.2);}
+        .kpi-val{font-family:var(--font-serif);font-size:31.2px;font-weight:700;color:#0A0E1A;line-height:1;letter-spacing:-.5px;}
+        .kpi-lbl{font-size:14.4px;font-weight:600;letter-spacing:.3px;color:#4A5568;margin-top:3px;text-transform:uppercase;}
+        .kpi-delta{font-family:var(--font-mono);font-size:12px;margin-top:4px;}
+        .kpi-delta.up{color:var(--emerald)}.kpi-delta.down{color:var(--ruby)}.kpi-delta.flat{color:#4A5568;}
+
+        /* FILTER BAR */
+        .filter-bar{display:flex;gap:8px;align-items:center;}
+        .filter-label{font-family:var(--font-mono);font-size:12px;letter-spacing:2px;color:#64748B;text-transform:uppercase;}
+        .filter-chip{font-family:var(--font-mono);font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid #D1DCF0;
+            color:#4A5568;cursor:pointer;transition:all .18s;background:transparent;}
+        .filter-chip:hover{color:#1A202C;border-color:rgba(37,99,235,.35);}
+        .filter-chip.active{background:rgba(37,99,235,.08);color:var(--blue-300);border-color:rgba(37,99,235,.35);}
+
+        /* SENSOR GRID */
+        .sensor-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+
+        /* SENSOR CARD */
+        .sensor-card{background:white;border:1px solid #E8EDF5;border-radius:var(--r-md);
+            overflow:hidden;transition:all .22s;cursor:pointer;animation:fadeUp .5s ease both;}
+        .sensor-card:hover{border-color:rgba(37,99,235,.35);box-shadow:0 0 24px rgba(37,99,235,.12);transform:translateY(-2px);}
+        .sensor-card.offline{opacity:.5;pointer-events:none;}
+        .sensor-card.alert{border-color:rgba(239,68,68,.35);box-shadow:0 0 16px rgba(239,68,68,.1);}
+        .sensor-card.warn{border-color:rgba(245,158,11,.3);}
+
+        .sc-header{padding:14px 16px 12px;border-bottom:1px solid #E8EDF5;display:flex;justify-content:space-between;align-items:flex-start;}
+        .sc-code{font-family:var(--font-mono);font-size:16.8px;font-weight:500;color:var(--blue-300);letter-spacing:1px;}
+        .sc-model{font-size:12px;color:#64748B;margin-top:2px;letter-spacing:.3px;}
+        .sc-belt{font-size:12px;color:#4A5568;margin-top:1px;}
+
+        /* Chip */
+        .chip{font-family:var(--font-mono);font-size:12.6px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;padding:3px 9px;border-radius:20px;}
+        .chip-ok{background:rgba(0,200,151,.1);color:var(--emerald);border:1px solid rgba(0,200,151,.25);}
+        .chip-alert{background:rgba(239,68,68,.1);color:#FCA5A5;border:1px solid rgba(239,68,68,.3);animation:chipPls .8s ease-in-out infinite alternate;}
+        .chip-warn{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.25);}
+        .chip-off{background:rgba(56,79,106,.15);color:#64748B;border:1px solid rgba(56,79,106,.3);}
+        .chip-cal{background:rgba(139,92,246,.1);color:var(--violet);border:1px solid rgba(139,92,246,.25);}
+        @keyframes chipPls{from{box-shadow:0 0 0 0 rgba(239,68,68,.3)}to{box-shadow:0 0 0 5px rgba(239,68,68,0)}}
+
+        /* LASER VISUAL */
+        .sc-laser-vis{position:relative;height:64px;background:linear-gradient(180deg,#F4F6FA,#F8FAFC);
+            overflow:hidden;border-bottom:1px solid #E8EDF5;}
+        .laser-beam-h{position:absolute;top:50%;left:0;right:0;height:1px;
+            background:linear-gradient(90deg,transparent,rgba(33,150,243,.8),var(--blue-300),rgba(33,150,243,.8),transparent);
+            transform:translateY(-50%);}
+        .laser-beam-h.active{animation:laserH 2.5s ease-in-out infinite;}
+        .laser-beam-h.alert{background:linear-gradient(90deg,transparent,rgba(239,68,68,.8),#FCA5A5,rgba(239,68,68,.8),transparent);animation:laserH .8s ease-in-out infinite;}
+        .laser-beam-h.warn{background:linear-gradient(90deg,transparent,rgba(245,158,11,.8),var(--amber),rgba(245,158,11,.8),transparent);animation:laserH 1.4s ease-in-out infinite;}
+        @keyframes laserH{0%,100%{opacity:.4}50%{opacity:1;filter:drop-shadow(0 0 4px rgba(33,150,243,.6))}}
+        .laser-dot-h{position:absolute;top:50%;width:6px;height:6px;border-radius:50%;transform:translate(-50%,-50%);
+            background:var(--blue-300);box-shadow:0 0 8px var(--blue-300),0 0 20px rgba(33,150,243,.4);
+            animation:dotH 2.5s ease-in-out infinite;}
+        .laser-dot-h.alert{background:var(--ruby);box-shadow:0 0 8px var(--ruby),0 0 20px rgba(239,68,68,.4);animation:dotH .8s infinite;}
+        .laser-dot-h.warn{background:var(--amber);box-shadow:0 0 8px var(--amber);animation:dotH 1.4s infinite;}
+        @keyframes dotH{0%,100%{opacity:.7}50%{opacity:1}}
+        .target-line{position:absolute;top:0;bottom:0;width:1px;background:rgba(33,150,243,.12);left:50%;}
+        .target-line::after{content:'';position:absolute;bottom:6px;left:50%;transform:translateX(-50%);
+            width:8px;height:8px;border:1px solid rgba(33,150,243,.3);border-radius:50%;}
+        .sc-dist-badge{position:absolute;bottom:6px;right:8px;font-family:var(--font-mono);font-size:12.6px;
+            color:var(--blue-300);background:rgba(255,255,255,.92);padding:2px 6px;border-radius:2px;letter-spacing:1px;}
+
+        /* METRICS */
+        .sc-metrics{padding:12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+        .sc-m{display:flex;flex-direction:column;gap:2px;}
+        .sc-mv{font-family:var(--font-mono);font-size:15px;font-weight:500;color:#1A202C;}
+        .sc-ml{font-size:12.6px;color:#64748B;letter-spacing:.5px;text-transform:uppercase;}
+
+        /* MINI CHART */
+        .sc-mini-chart{padding:0 16px 14px;}
+        .sc-chart-label{font-family:var(--font-mono);font-size:12.6px;color:#64748B;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;}
+        canvas.mini-cv{width:100%!important;height:36px!important;display:block;}
+
+        /* FOOTER ROW */
+        .sc-footer{padding:8px 16px;border-top:1px solid #E2E6EE;display:flex;justify-content:space-between;align-items:center;
+            background:rgba(255,255,255,.92);}
+        .sc-uptime{font-family:var(--font-mono);font-size:12.6px;color:#64748B;}
+        .sc-uptime span{color:var(--emerald);}
+
+        /* SPEC TABLE */
+        .spec-section{background:white;border:1px solid #E8EDF5;border-radius:var(--r-md);overflow:hidden;animation:fadeUp .5s .15s ease both;}
+        .spec-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+        .spec-col{padding:18px 22px;}
+        .spec-col+.spec-col{border-left:1px solid #E8EDF5;}
+        .spec-col-title{font-family:var(--font-serif);font-size:15.6px;font-weight:600;color:#0A0E1A;margin-bottom:12px;letter-spacing:.3px;}
+        .spec-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(11,23,48,.5);}
+        .spec-row:last-child{border-bottom:none;}
+        .spec-key{font-size:13.2px;color:#4A5568;}
+        .spec-val{font-family:var(--font-mono);font-size:13.2px;color:#1A202C;}
+        .spec-val.good{color:var(--emerald);}
+        .spec-val.warn{color:var(--amber);}
+
+        /* CARD BASE */
+        .card{background:white;border:1px solid #E8EDF5;border-radius:var(--r-md);overflow:hidden;}
+        .card-head{display:flex;align-items:center;justify-content:space-between;padding:13px 18px 11px;border-bottom:1px solid #E8EDF5;}
+        .card-title{font-family:var(--font-serif);font-size:18px;font-weight:600;color:#0A0E1A;letter-spacing:.3px;}
+        .card-sub{font-family:var(--font-mono);font-size:12.6px;color:#4A5568;letter-spacing:1px;text-transform:uppercase;font-weight:500;}
+
+        /* LOG TABLE */
+        .log-scroll{overflow-y:auto;max-height:200px;}
+        .log-table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:13.8px;}
+        .log-table th{text-align:left;padding:7px 13px;color:#64748B;font-size:11.4px;letter-spacing:2px;
+            text-transform:uppercase;border-bottom:1px solid #E8EDF5;font-weight:400;}
+        .log-table td{padding:8px 13px;border-bottom:1px solid rgba(11,23,48,.7);color:#1A202C;line-height:1.35;transition:background .15s;}
+        .log-table tr:hover td{background:rgba(37,99,235,.04);}
+        .sbadge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:12.6px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;}
+        .sb-ok{background:rgba(0,200,151,.1);color:var(--emerald);border:1px solid rgba(0,200,151,.2);}
+        .sb-warn{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2);}
+        .sb-crit{background:rgba(239,68,68,.1);color:#FCA5A5;border:1px solid rgba(239,68,68,.25);}
+
+        /* BTN */
+        .btn{font-family:var(--font-sans);font-size:14.4px;font-weight:600;letter-spacing:.3px;padding:7px 15px;
+            border-radius:var(--r-sm);border:1px solid transparent;cursor:pointer;transition:all .18s;white-space:nowrap;}
+        .btn:active{transform:scale(.97);}
+        .btn-blue{background:var(--blue-600);color:#fff;border-color:var(--blue-500);}
+        .btn-blue:hover{background:var(--blue-500);box-shadow:0 0 16px rgba(33,150,243,.35);}
+        .btn-ghost{background:white;color:var(--blue-300);border-color:rgba(37,99,235,.35);}
+        .btn-ghost:hover{background:rgba(37,99,235,.08);}
+        .btn-danger{background:rgba(239,68,68,.14);color:#FCA5A5;border-color:rgba(239,68,68,.38);}
+
+        /* TOAST */
+        .toast{position:fixed;bottom:22px;right:22px;width:310px;background:white;border:1px solid #D1DCF0;
+            border-left:3px solid var(--blue-400);border-radius:var(--r-md);padding:13px 15px;z-index:999;
+            transform:translateX(360px);transition:transform .35s cubic-bezier(.2,.8,.2,1);
+            box-shadow:0 8px 40px rgba(0,0,0,.55),0 0 18px rgba(37,99,235,.12);}
+        .toast.on{transform:translateX(0);}
+        .toast.danger{border-left-color:var(--ruby);}
+        .toast-title{font-family:var(--font-serif);font-size:16.8px;font-weight:700;color:#0A0E1A;margin-bottom:4px;}
+        .toast-msg{font-size:15.6px;color:#374151;line-height:1.5;}
+        .toast-ts{font-family:var(--font-mono);font-size:12.6px;color:#64748B;margin-top:6px;}
+
+        footer{display:flex;justify-content:space-between;padding:10px 0 2px;border-top:1px solid #E2E6EE;
+            font-family:var(--font-mono);font-size:11.4px;color:#64748B;letter-spacing:1px;}
+
+        /* ── RESPONSIVO (Melhoria 3) ── */
+        @media (max-width: 1100px){
+            .sensor-grid{grid-template-columns:repeat(2,1fr);}
+            .kpi-bar{grid-template-columns:repeat(3,1fr);}
+        }
+        @media (max-width: 700px){
+            .sensor-grid{grid-template-columns:1fr;}
+            .kpi-bar{grid-template-columns:1fr 1fr;}
+            .spec-grid,.sc-metrics{grid-template-columns:1fr;}
+            main{padding:16px;}
+        }
+        @media (max-width: 420px){
+            .kpi-bar{grid-template-columns:1fr;}
+        }
+    </style>
+</head>
+<body>
+
+<header th:replace="~{fragments/header :: header(paginaAtiva='sensores')}"></header>
+
+<main>
+    <div class="page-header">
+        <div>
+            <div class="page-title">Sensores a Laser</div>
+            <div class="page-sub">9 dispositivos monitorados · Modelo SAEB-LAS II</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <a href="/sensores/novo" class="btn btn-blue">+ Novo Sensor</a>
+        </div>
+    </div>
+
+    <!-- KPI -->
+    <div class="kpi-bar">
+        <div class="kpi"><div class="kpi-icon ki-green">◈</div><div>
+            <div class="kpi-val" th:text="${totalSensores}">0</div><div class="kpi-lbl">Total de Sensores</div>
+        </div></div>
+        <div class="kpi"><div class="kpi-icon ki-green">⬤</div><div>
+            <div class="kpi-val" th:text="${totalNormal}">0</div><div class="kpi-lbl">Normal</div>
+        </div></div>
+        <div class="kpi"><div class="kpi-icon ki-red">⚡</div><div>
+            <div class="kpi-val" th:text="${totalCritico}">0</div><div class="kpi-lbl">Em Alerta</div>
+        </div></div>
+        <div class="kpi"><div class="kpi-icon ki-amber">⟳</div><div>
+            <div class="kpi-val" th:text="${totalAtencao}">0</div><div class="kpi-lbl">Em Atenção</div>
+        </div></div>
+        <div class="kpi"><div class="kpi-icon ki-cyan">◆</div><div>
+            <div class="kpi-val" th:text="${totalConectados} + ' / ' + ${totalSensores}">0 / 0</div><div class="kpi-lbl">Conectados</div>
+        </div></div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+        <span class="filter-label">Filtrar:</span>
+        <span class="filter-chip active" onclick="filterSensors('all',this)">Todos</span>
+        <span class="filter-chip" onclick="filterSensors('online',this)">Online</span>
+        <span class="filter-chip" onclick="filterSensors('alert',this)">Em Alerta</span>
+        <span class="filter-chip" onclick="filterSensors('offline',this)">Offline</span>
+    </div>
+
+    <!-- SENSOR GRID -->
+    <div class="sensor-grid" id="sensorGrid">
+
+        <!-- SENSORES DO BANCO DE DADOS -->
+        <div th:each="s : ${sensores}"
+             th:classappend="${s.nivelRisco.name() == 'CRITICO'} ? ' alert' : (${s.nivelRisco.name() == 'ATENCAO'} ? ' warn' : '')"
+             class="sensor-card"
+             th:attr="data-status=${!s.conectado} ? 'offline' : (${s.nivelRisco.name() == 'CRITICO'} ? 'alert' : (${s.nivelRisco.name() == 'ATENCAO'} ? 'warn' : 'online'))">
+
+            <div class="sc-header">
+                <div>
+                    <div class="sc-code"
+                         th:text="${s.modelo}"
+                         th:style="${s.nivelRisco.name() == 'CRITICO'} ? 'color:var(--ruby)' : (${s.nivelRisco.name() == 'ATENCAO'} ? 'color:var(--amber)' : '')">
+                        SENSOR
+                    </div>
+                    <div class="sc-model">SDAE-LAS II</div>
+                    <div class="sc-belt" th:text="${s.esteira != null ? s.esteira.nome + ' · ' + s.esteira.localizacao : 'Sem esteira'}">—</div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+                    <div th:if="${s.nivelRisco.name() == 'CRITICO'}" class="chip chip-alert">⚠ Alerta</div>
+                    <div th:if="${s.nivelRisco.name() == 'ATENCAO'}" class="chip chip-warn">Atenção</div>
+                    <div th:if="${s.nivelRisco.name() == 'NORMAL'}"  class="chip chip-ok">Normal</div>
+
+                    <!-- Indicador de conexão do ESP32 (Melhoria: sensor conectado) -->
+                    <div class="chip" th:classappend="${s.conectado} ? ' chip-ok' : ' chip-off'"
+                         th:text="${s.conectado} ? '● Conectado' : '○ Offline'"
+                         th:title="${s.ultimaLeituraTexto}">
+                        ● Conectado
+                    </div>
+                </div>
+            </div>
+
+            <div class="sc-laser-vis">
+                <div class="target-line"></div>
+                <div th:classappend="${s.nivelRisco.name() == 'CRITICO'} ? ' alert' : (${s.nivelRisco.name() == 'ATENCAO'} ? ' warn' : ' active')"
+                     class="laser-beam-h"></div>
+                <div th:classappend="${s.nivelRisco.name() == 'CRITICO'} ? ' alert' : (${s.nivelRisco.name() == 'ATENCAO'} ? ' warn' : '')"
+                     class="laser-dot-h"
+                     th:style="'left:' + ${s.leituraAtual} + '%'"></div>
+                <div class="sc-dist-badge"
+                     th:text="${s.leituraAtual} + '%'"
+                     th:style="${s.nivelRisco.name() == 'CRITICO'} ? 'color:var(--ruby)' : (${s.nivelRisco.name() == 'ATENCAO'} ? 'color:var(--amber)' : '')">
+                    0%
+                </div>
+            </div>
+
+            <div class="sc-metrics">
+                <div class="sc-m">
+          <span class="sc-mv"
+                th:text="${s.leituraAtual} + '%'"
+                th:style="${s.nivelRisco.name() == 'CRITICO'} ? 'color:var(--ruby)' : (${s.nivelRisco.name() == 'ATENCAO'} ? 'color:var(--amber)' : '')">
+            0%
+          </span>
+                    <span class="sc-ml">Leitura</span>
+                </div>
+                <div class="sc-m">
+                    <span class="sc-mv" th:text="${s.conectado} ? '● Online' : '○ Offline'"
+                          th:style="${s.conectado} ? 'color:var(--emerald)' : 'color:#64748B'">—</span>
+                    <span class="sc-ml">Conexão</span>
+                </div>
+                <div class="sc-m">
+                    <span class="sc-mv" th:text="${s.nivelRisco.name()}">—</span>
+                    <span class="sc-ml">Nível</span>
+                </div>
+                <div class="sc-m">
+                    <span class="sc-mv" th:text="'ID #' + ${s.id}">—</span>
+                    <span class="sc-ml">Código</span>
+                </div>
+            </div>
+
+            <div class="sc-mini-chart">
+                <div class="sc-chart-label"
+                     th:text="${s.nivelRisco.name() == 'CRITICO'} ? '⚠ Nível crítico' : (${s.nivelRisco.name() == 'ATENCAO'} ? 'Em atenção' : 'Operando normal')"
+                     th:style="${s.nivelRisco.name() == 'CRITICO'} ? 'color:var(--ruby)' : (${s.nivelRisco.name() == 'ATENCAO'} ? 'color:var(--amber)' : '')">
+                    —
+                </div>
+            </div>
+
+            <div class="sc-footer">
+                <span class="sc-uptime">Esteira: <span th:text="${s.esteira != null ? s.esteira.nome : '—'}">—</span>
+                    &nbsp;·&nbsp;Último sinal: <span th:text="${s.ultimaLeituraTexto}">—</span>
+                </span>
+                <div style="display:flex;gap:8px;">
+                    <a th:href="@{/sensores/detalhe/{id}(id=${s.id})}"
+                       style="font-family:var(--font-mono);font-size:11px;color:#2563EB;text-decoration:none;">Detalhe</a>
+                    <a th:href="@{/sensores/editar/{id}(id=${s.id})}"
+                       style="font-family:var(--font-mono);font-size:11px;color:#2563EB;text-decoration:none;">Editar</a>
+                    <!-- CORRIGIDO (S5): exclusão agora é POST, não GET (era vulnerável a CSRF via link) -->
+                    <form th:action="@{/sensores/deletar/{id}(id=${s.id})}" method="post"
+                          style="display:inline;margin:0;">
+                        <th:block th:replace="~{fragments/csrf :: token}"/>
+                        <button type="submit"
+                                class="sdae-confirm-delete"
+                                data-confirm-titulo="Deletar este sensor?"
+                                data-confirm-mensagem="Esta ação não pode ser desfeita."
+                                style="font-family:var(--font-mono);font-size:11px;color:#EF4444;background:none;border:none;padding:0;cursor:pointer;text-decoration:none;">Deletar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensagem quando não há sensores -->
+        <div th:if="${#lists.isEmpty(sensores)}"
+             style="grid-column:1/-1;text-align:center;padding:40px;color:#64748B;">
+            <div style="font-size:32px;margin-bottom:12px;">⚡</div>
+            <div style="font-size:16px;font-weight:500;margin-bottom:8px;">Nenhum sensor cadastrado</div>
+            <a href="/sensores/novo" style="color:#2563EB;font-size:14px;">+ Cadastrar primeiro sensor →</a>
+        </div>
+
+    </div><!-- /sensor-grid -->
+    <!-- COMO FUNCIONA A INTEGRAÇÃO — reflete o fluxo real ESP32 → API, sem inventar specs de hardware -->
+    <div class="spec-section">
+        <div class="card-head">
+            <div class="card-title">Como o Sensor se Conecta</div>
+            <span class="card-sub">Integração real via ESP32 + Chave de API</span>
+        </div>
+        <div class="spec-grid">
+            <div class="spec-col">
+                <div class="spec-col-title">Fluxo de Envio de Leitura</div>
+                <div class="spec-row"><span class="spec-key">Método</span><span class="spec-val good">HTTP POST</span></div>
+                <div class="spec-row"><span class="spec-key">Endpoint</span><span class="spec-val">/api/sensores/{id}/leitura</span></div>
+                <div class="spec-row"><span class="spec-key">Autenticação</span><span class="spec-val good">Cabeçalho X-API-Key</span></div>
+                <div class="spec-row"><span class="spec-key">Corpo da requisição</span><span class="spec-val">{ "valor": 0-100 }</span></div>
+            </div>
+            <div class="spec-col">
+                <div class="spec-col-title">Onde Encontrar a Chave</div>
+                <div class="spec-row"><span class="spec-key">Chave de API</span><span class="spec-val good">Gerada ao salvar o sensor</span></div>
+                <div class="spec-row"><span class="spec-key">Visível em</span><span class="spec-val">Tela de edição do sensor</span></div>
+                <div class="spec-row"><span class="spec-key">Status de conexão</span><span class="spec-val good">Atualizado a cada leitura recebida</span></div>
+                <div class="spec-row"><span class="spec-key">Considerado offline após</span><span class="spec-val">15s sem leitura</span></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <span>SDAE — Sistemas de Automação de Esteiras &nbsp;|&nbsp; SDAE &nbsp;|&nbsp; Gestão de Sensores</span>
+        <span id="fdate">—</span>
+    </footer>
+</main>
+
+<div class="toast" id="toast">
+    <div class="toast-title" id="tTitle">Notificação</div>
+    <div class="toast-msg"   id="tMsg">—</div>
+    <div class="toast-ts"    id="tTs">—</div>
+</div>
+
+<script>
+    // Relógio
+    setInterval(() => {
+        const el = document.getElementById('clk');
+        if (el) el.textContent = new Date().toLocaleTimeString('pt-BR');
+    }, 1000);
+    // Data no rodapé
+    (()=>{
+        const el = document.getElementById('fdate');
+        if (el) el.textContent = new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'long', year:'numeric'});
+    })();
+    // Filtro por nível de risco (data-status definido pelo th:attr no Thymeleaf)
+    function filterSensors(f, el) {
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        document.querySelectorAll('.sensor-card').forEach(c => {
+            const s = c.dataset.status;
+            c.style.display = (f === 'all' || f === s) ? '' : 'none';
+        });
+    }
+</script>
+<script th:src="@{/js/crud.js}"></script>
+<th:block th:replace="~{fragments/sdae-scripts :: bundle('sensores-page.js')}"></th:block>
+<script th:src="@{/js/sdae-forms.js}"></script>
+</body>
+</html>

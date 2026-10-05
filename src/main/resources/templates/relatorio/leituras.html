@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDAE — Histórico de Leituras</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/sdae-base.css}">
+    <style>
+        html { font-size: 18px; }
+        body { background: #F4F6FA; color: #1A202C; font-family: var(--font-sans); min-height: 100vh; }
+        main { padding: 24px 28px 40px; max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+        
+        .page-header { display: flex; align-items: flex-end; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid #E8EDF5; }
+        .page-title { font-family: var(--font-serif); font-size: 30px; font-weight: 700; color: #0A0E1A; }
+        .page-sub { font-family: var(--font-mono); font-size: 12px; letter-spacing: 2px; color: #4A5568; text-transform: uppercase; margin-top: 3px; }
+        
+        .card { background: white; border: 1px solid #E8EDF5; border-radius: var(--r-md); overflow: hidden; }
+        .filter-bar { padding: 16px 20px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; background: #FAFBFD; border-bottom: 1px solid #E8EDF5; }
+        .filter-group { display: flex; align-items: center; gap: 8px; }
+        .filter-label { font-size: 12px; font-weight: 500; color: #4A5568; text-transform: uppercase; letter-spacing: .5px; }
+        .filter-select { font-family: var(--font-sans); font-size: 13px; padding: 6px 12px; border-radius: 6px; border: 1px solid #D1DCF0; background: white; color: #1A202C; }
+        
+        .btn { font-family: var(--font-sans); font-size: 13px; font-weight: 600; padding: 7px 16px; border-radius: 6px; border: none; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all .2s; }
+        .btn-primary { background: #2563EB; color: white; }
+        .btn-primary:hover { background: #1D4ED8; }
+        .btn-ghost { background: white; color: #4A5568; border: 1px solid #D1DCF0; }
+        .btn-ghost:hover { border-color: #2563EB; }
+
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: left; padding: 12px 16px; color: #64748B; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; font-family: var(--font-mono); border-bottom: 1px solid #E8EDF5; background: #F8FAFC; }
+        td { padding: 12px 16px; border-bottom: 1px solid #E8EDF5; color: #1A202C; font-family: var(--font-mono); }
+        tr:hover td { background: rgba(37,99,235,.03); }
+
+        .sbadge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+        .sb-running { background: rgba(16,185,129,.12); color: #059669; border: 1px solid rgba(16,185,129,.3); }
+        .sb-stopped { background: rgba(239,68,68,.12); color: #DC2626; border: 1px solid rgba(239,68,68,.3); }
+        .sb-offline { background: rgba(100,116,139,.12); color: #475569; border: 1px solid rgba(100,116,139,.3); }
+        .sb-maint   { background: rgba(37,99,235,.12); color: #2563EB; border: 1px solid rgba(37,99,235,.3); }
+
+        .pagination { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: #FAFBFD; border-top: 1px solid #E8EDF5; font-family: var(--font-mono); font-size: 12px; color: #64748B; }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header(paginaAtiva='leituras')}"></header>
+
+<main>
+    <div class="page-header">
+        <div>
+            <div class="page-title">Histórico de Leituras</div>
+            <div class="page-sub">Telemetria Real Armazenada em Banco MySQL</div>
+        </div>
+        <div style="display:flex;gap:10px;">
+            <a href="/leituras" class="btn btn-ghost">↻ Atualizar</a>
+            <a href="/dashboard" class="btn btn-primary">← Dashboard</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <!-- Barra de Filtros (Req. 19) -->
+        <form method="get" action="/leituras" class="filter-bar">
+            <div class="filter-group">
+                <span class="filter-label">Esteira:</span>
+                <select name="esteiraId" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Todas as Esteiras</option>
+                    <option th:each="e : ${esteiras}" th:value="${e.id}" th:text="${e.nome}"
+                            th:selected="${esteiraSelecionada != null and esteiraSelecionada == e.id}"></option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <span class="filter-label">Sensor:</span>
+                <select name="sensorId" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Todos os Sensores</option>
+                    <option th:each="s : ${sensores}" th:value="${s.id}" th:text="${s.modelo}"
+                            th:selected="${sensorSelecionado != null and sensorSelecionado == s.id}"></option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="margin-left:auto;">Filtrar</button>
+        </form>
+
+        <!-- Tabela de Leituras (Req. 19) -->
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Data / Hora</th>
+                    <th>Esteira</th>
+                    <th>Sensor</th>
+                    <th style="text-align:right;">LDR (Valor Bruto)</th>
+                    <th>Laser</th>
+                    <th>Pulso</th>
+                    <th>Status da Esteira</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="l : ${leituras}">
+                    <td th:text="${l.dataHoraFormatada}">2026-10-05 12:00:00</td>
+                    <td style="font-weight:600;color:#0A0E1A;" th:text="${l.esteiraNome}">Esteira 01</td>
+                    <td th:text="${l.sensorModelo}">LDR-001</td>
+                    <td style="text-align:right;font-weight:700;" th:text="${l.valorLdr != null ? l.valorLdr : '—'}">1820</td>
+                    <td>
+                        <span th:if="${l.laserDetectado}" style="color:#059669;font-weight:600;">● Feixe Presente</span>
+                        <span th:unless="${l.laserDetectado}" style="color:#DC2626;font-weight:600;">○ Interrompido</span>
+                    </td>
+                    <td>
+                        <span th:if="${l.pulsoDetectado}" style="color:#2563EB;font-weight:700;">SIM (Pulso)</span>
+                        <span th:unless="${l.pulsoDetectado}" style="color:#64748B;">NÃO</span>
+                    </td>
+                    <td>
+                        <span th:if="${l.estadoEsteira != null and l.estadoEsteira.name() == 'RUNNING'}" class="sbadge sb-running">🟢 Funcionando</span>
+                        <span th:if="${l.estadoEsteira != null and l.estadoEsteira.name() == 'STOPPED'}" class="sbadge sb-stopped">🔴 Parada</span>
+                        <span th:if="${l.estadoEsteira != null and l.estadoEsteira.name() == 'OFFLINE'}" class="sbadge sb-offline">⚫ Offline</span>
+                        <span th:if="${l.estadoEsteira != null and l.estadoEsteira.name() == 'MAINTENANCE'}" class="sbadge sb-maint">🟡 Manutenção</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(leituras)}">
+                    <td colspan="7" style="text-align:center;padding:32px;color:#64748B;">
+                        Nenhuma leitura registrada no banco de dados com os filtros selecionados.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginação -->
+        <div class="pagination">
+            <span th:text="'Página ' + (${paginaAtual} + 1) + ' — Mostrando até ' + ${tamanho} + ' registros'">Página 1</span>
+            <div style="display:flex;gap:8px;">
+                <a th:if="${paginaAtual > 0}"
+                   th:href="@{/leituras(esteiraId=${esteiraSelecionada},sensorId=${sensorSelecionado},pagina=${paginaAtual - 1},tamanho=${tamanho})}"
+                   class="btn btn-ghost">← Anterior</a>
+                <a th:if="${leituras != null and #lists.size(leituras) == tamanho}"
+                   th:href="@{/leituras(esteiraId=${esteiraSelecionada},sensorId=${sensorSelecionado},pagina=${paginaAtual + 1},tamanho=${tamanho})}"
+                   class="btn btn-ghost">Próxima →</a>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

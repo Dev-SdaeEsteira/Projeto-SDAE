@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDAE — Mapa de Esteiras</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/sdae-base.css}">
+    <style>
+
+        html{font-size:18px;}
+        body{background:#F4F6FA;color:#1A202C;font-family:var(--font-sans);min-height:100vh;overflow-x:hidden;
+            background-image:radial-gradient(ellipse 80% 40% at 50% -5%,rgba(255,255,255,0.1) 0%,transparent 55%),
+            linear-gradient(#E8EDF5 1px,transparent 1px),linear-gradient(90deg,#E8EDF5 1px,transparent 1px);
+            background-size:100% 100%,48px 48px,48px 48px;}
+        ::-webkit-scrollbar{width:5px;height:5px;}
+        ::-webkit-scrollbar-track{background:#F4F6FA;}
+        ::-webkit-scrollbar-thumb{background:#C7D7F8;border-radius:3px;}
+
+        /* HEADER */
+
+        
+
+        
+
+        
+
+        @keyframes pls{0%,100%{box-shadow:0 0 0 0 rgba(0,200,151,.5);}50%{box-shadow:0 0 0 5px rgba(0,200,151,0);}}
+
+        /* MAIN */
+        main{padding:24px 28px 32px;max-width:1600px;margin:0 auto;display:flex;flex-direction:column;gap:20px;}
+        .page-header{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid #E8EDF5;}
+        .page-title{font-family:var(--font-serif);font-size:31.2px;font-weight:700;color:#0A0E1A;letter-spacing:.3px;}
+        .page-sub{font-family:var(--font-mono);font-size:12px;letter-spacing:2px;color:#4A5568;text-transform:uppercase;margin-top:4px;}
+        .page-actions{display:flex;gap:8px;}
+
+        /* KPI BAR */
+        .kpi-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+        .kpi{background:white;border:1px solid #E8EDF5;border-radius:var(--r-md);padding:15px 17px;
+            display:flex;align-items:center;gap:13px;transition:border-color .25s,box-shadow .25s;animation:fadeUp .5s ease both;}
+        .kpi:nth-child(1){animation-delay:.05s}.kpi:nth-child(2){animation-delay:.10s}.kpi:nth-child(3){animation-delay:.15s}
+        .kpi:nth-child(4){animation-delay:.20s}.kpi:nth-child(5){animation-delay:.25s}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .kpi:hover{border-color:rgba(37,99,235,.35);box-shadow:0 0 20px rgba(37,99,235,.08);}
+        .kpi-icon{width:42px;height:42px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:21.6px;flex-shrink:0;}
+        .ki-blue{background:rgba(37,99,235,.08);color:var(--blue-300);border:1px solid #D1DCF0;}
+        .ki-green{background:rgba(0,200,151,.08);color:var(--emerald);border:1px solid rgba(0,200,151,.2);}
+        .ki-red{background:rgba(239,68,68,.08);color:var(--ruby);border:1px solid rgba(239,68,68,.2);}
+        .ki-amber{background:rgba(245,158,11,.08);color:var(--amber);border:1px solid rgba(245,158,11,.2);}
+        .ki-violet{background:rgba(139,92,246,.08);color:var(--violet);border:1px solid rgba(139,92,246,.2);}
+        .kpi-val{font-family:var(--font-serif);font-size:31.2px;font-weight:700;color:#0A0E1A;line-height:1;letter-spacing:-.5px;}
+        .kpi-lbl{font-size:14.4px;font-weight:600;letter-spacing:.3px;color:#4A5568;margin-top:3px;text-transform:uppercase;}
+        .kpi-delta{font-family:var(--font-mono);font-size:12px;margin-top:4px;}
+        .kpi-delta.up{color:var(--emerald)}.kpi-delta.down{color:var(--ruby)}.kpi-delta.flat{color:#4A5568;}
+
+        /* CONTENT GRID */
+        .content-grid{display:grid;grid-template-columns:1fr 340px;gap:18px;}
+
+        /* MAP CARD */
+        .map-card{background:white;border:1px solid #E8EDF5;border-radius:var(--r-md);overflow:hidden;animation:fadeUp .5s .1s ease both;}
+        .card-head{display:flex;align-items:center;justify-content:space-between;padding:13px 18px 11px;border-bottom:1px solid #E8EDF5;}
+        .card-title{font-family:var(--font-serif);font-size:18px;font-weight:600;color:#0A0E1A;letter-spacing:.3px;}
+        .card-sub{font-family:var(--font-mono);font-size:12.6px;color:#4A5568;letter-spacing:1px;text-transform:uppercase;font-weight:500;}
+        .map-wrap{position:relative;padding:28px;background:linear-gradient(180deg,#F8FAFC,#F4F6FA);}
+
+        /* SVG styles */
+        .plant-area{fill:rgba(15,32,64,.6);stroke:#D1DCF0;stroke-width:1;}
+        .plant-label{font-family:'IBM Plex Mono',monospace;font-size:13.2px;fill:#64748B;letter-spacing:1px;text-transform:uppercase;}
+        .belt-line{stroke-width:8;stroke-linecap:round;stroke-linejoin:round;fill:none;transition:stroke .3s;}
+        .belt-line.ok{stroke:#00C897;}
+        .belt-line.warn{stroke:#F59E0B;animation:beltPulse 1.5s ease-in-out infinite;}
+        .belt-line.crit{stroke:#EF4444;animation:beltPulse .8s ease-in-out infinite;}
+        .belt-line.maint{stroke:#384F6A;stroke-dasharray:12 6;}
+        @keyframes beltPulse{0%,100%{opacity:1}50%{opacity:.5}}
+        .belt-line-bg{stroke-width:14;stroke-linecap:round;fill:none;opacity:.12;}
+        .belt-line-bg.ok{stroke:#00C897}.belt-line-bg.warn{stroke:#F59E0B}
+        .belt-line-bg.crit{stroke:#EF4444}.belt-line-bg.maint{stroke:#384F6A}
+        .node-circle{stroke-width:2;cursor:pointer;transition:r .2s;}
+        .node-label{font-family:'IBM Plex Mono',monospace;font-size:12px;fill:#1A202C;font-weight:500;}
+        .node-sub{font-family:'IBM Plex Mono',monospace;font-size:12.6px;fill:#4A5568;}
+        .alert-badge{fill:var(--ruby);}
+        .alert-badge-text{font-family:'IBM Plex Mono',monospace;font-size:12.6px;fill:#fff;font-weight:600;}
+        .map-legend{display:flex;gap:20px;padding:12px 28px;border-top:1px solid #E2E6EE;background:rgba(255,255,255,.92);}
+        .leg-item{display:flex;align-items:center;gap:7px;font-size:13.2px;font-weight:500;color:#4A5568;}
+        .leg-line{width:24px;height:4px;border-radius:2px;}
+
+        /* RIGHT PANEL */
+        .right-panel{display:flex;flex-direction:column;gap:14px;animation:fadeUp .5s .2s ease both;}
+        .alert-rank{background:white;border:1px solid #E8EDF5;border-radius:var(--r-md);overflow:hidden;}
+        .rank-list{display:flex;flex-direction:column;}
+        .rank-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #E8EDF5;transition:background .15s;cursor:pointer;}
+        .rank-row:last-child{border-bottom:none;}
+        .rank-row:hover{background:rgba(37,99,235,.04);}
+        .rank-pos{font-family:var(--font-mono);font-size:13.2px;font-weight:500;color:#64748B;width:16px;flex-shrink:0;}
+        .rank-pos.top1{color:var(--ruby)}.rank-pos.top2{color:var(--amber)}.rank-pos.top3{color:var(--blue-300)}
+        .rank-info{flex:1;}
+        .rank-code{font-family:var(--font-mono);font-size:14.4px;font-weight:500;color:#1A202C;}
+        .rank-desc{font-size:12px;color:#64748B;margin-top:1px;}
+        .rank-bar-wrap{width:70px;}
+        .rank-bar-track{height:3px;background:#F0F4FF;border-radius:2px;overflow:hidden;}
+        .rank-bar-fill{height:100%;border-radius:2px;background:var(--ruby);transition:width .6s ease;}
+        .rank-num{font-family:var(--font-mono);font-size:13.2px;color:#4A5568;flex:0 0 24px;text-align:right;}
+        .status-summary{background:white;border:1px solid #E8EDF5;border-radius:var(--r-md);overflow:hidden;}
+        .sum-row{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-bottom:1px solid #E8EDF5;}
+        .sum-row:last-child{border-bottom:none;}
+        .sum-label{font-size:13.2px;color:#4A5568;display:flex;align-items:center;gap:8px;}
+        .sum-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+        .sum-val{font-family:var(--font-mono);font-size:13.2px;color:#1A202C;}
+        .timeline-card{background:white;border:1px solid #E8EDF5;border-radius:var(--r-md);overflow:hidden;}
+        .timeline-body{padding:14px 18px;display:flex;flex-direction:column;gap:10px;max-height:240px;overflow-y:auto;}
+        .tl-item{display:flex;gap:12px;align-items:flex-start;}
+        .tl-dot-wrap{display:flex;flex-direction:column;align-items:center;flex-shrink:0;}
+        .tl-dot{width:8px;height:8px;border-radius:50%;margin-top:3px;}
+        .tl-dot.crit{background:var(--ruby);}.tl-dot.warn{background:var(--amber);}.tl-dot.ok{background:var(--emerald);}
+        .tl-line{width:1px;flex:1;min-height:16px;background:#E8EDF5;margin-top:2px;}
+        .tl-info{flex:1;}
+        .tl-time{font-family:var(--font-mono);font-size:12.6px;color:#64748B;}
+        .tl-msg{font-size:13.2px;color:#1A202C;margin-top:1px;line-height:1.4;}
+        .tl-tag{font-family:var(--font-mono);font-size:12.6px;color:var(--blue-300);}
+
+        /* CHIP */
+        .chip{font-family:var(--font-mono);font-size:12.6px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;padding:3px 9px;border-radius:20px;}
+        .chip-ok{background:rgba(0,200,151,.1);color:var(--emerald);border:1px solid rgba(0,200,151,.25);}
+        .chip-alert{background:rgba(239,68,68,.1);color:#FCA5A5;border:1px solid rgba(239,68,68,.3);animation:chipPls .8s ease-in-out infinite alternate;}
+        .chip-stop{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.25);}
+        .chip-maint{background:rgba(37,99,235,.08);color:var(--blue-300);border:1px solid #D1DCF0;}
+        @keyframes chipPls{from{box-shadow:0 0 0 0 rgba(239,68,68,.3)}to{box-shadow:0 0 0 5px rgba(239,68,68,0)}}
+
+        /* BELT DETAIL CARDS */
+        .belt-details-wrap{display:flex;flex-direction:column;gap:10px;}
+        .belt-details-head{display:flex;align-items:center;justify-content:space-between;padding:0 2px;}
+        .belt-details-title{font-family:var(--font-serif);font-size:18px;font-weight:600;color:#0A0E1A;}
+        .belt-details-sub{font-family:var(--font-mono);font-size:12px;color:#64748B;letter-spacing:1px;}
+        .belt-details{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+        .belt-detail-card{background:white;border:1px solid #E8EDF5;border-radius:var(--r-md);padding:14px 16px;
+            transition:all .22s;cursor:pointer;position:relative;overflow:hidden;}
+        .belt-detail-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;
+            background:var(--blue-500);opacity:0;transition:opacity .2s;}
+        .belt-detail-card:hover{border-color:rgba(37,99,235,.35);background:#F0F4FF;box-shadow:0 0 20px rgba(37,99,235,.08);}
+        .belt-detail-card:hover::before{opacity:1;}
+        .belt-detail-card.has-alert{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.04);}
+        .belt-detail-card.has-alert::before{background:var(--ruby);opacity:1;}
+        .belt-detail-card.in-maint{border-color:rgba(245,158,11,.2);}
+        .belt-detail-card.in-maint::before{background:var(--amber);opacity:1;}
+        .bdc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+        .bdc-code{font-family:var(--font-serif);font-size:21.6px;font-weight:700;color:#0A0E1A;}
+        .bdc-line{font-size:12px;color:#4A5568;margin-top:2px;}
+        .bdc-metrics{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;}
+        .bdc-m{display:flex;flex-direction:column;gap:1px;}
+        .bdc-mv{font-family:var(--font-mono);font-size:14.4px;font-weight:500;color:#1A202C;}
+        .bdc-ml{font-size:12.6px;color:#64748B;letter-spacing:.5px;text-transform:uppercase;}
+        .bdc-alerts{display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid #E2E6EE;}
+        .bdc-alert-count{font-family:var(--font-mono);font-size:13.2px;color:#4A5568;}
+
+        /* EMPTY STATES */
+        .panel-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 16px;text-align:center;gap:6px;}
+        .panel-empty-icon{font-size:22px;color:#C7D7F8;}
+        .panel-empty-msg{font-size:12.6px;color:#A0AABB;font-family:var(--font-mono);letter-spacing:.5px;}
+        .belt-empty-state{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+            padding:48px 24px;text-align:center;border:1.5px dashed #D1DCF0;border-radius:var(--r-md);background:rgba(240,244,255,.4);}
+        .belt-empty-icon{font-size:36px;color:#C7D7F8;margin-bottom:12px;line-height:1;}
+        .belt-empty-title{font-family:var(--font-serif);font-size:18px;font-weight:600;color:#64748B;margin-bottom:6px;}
+        .belt-empty-msg{font-size:13.2px;color:#A0AABB;line-height:1.6;max-width:320px;}
+
+        /* BTNS */
+        .btn{font-family:var(--font-sans);font-size:14.4px;font-weight:600;padding:7px 15px;border-radius:var(--r-sm);
+            border:1px solid transparent;cursor:pointer;transition:all .18s;text-decoration:none;display:inline-block;}
+        .btn-blue{background:var(--blue-600);color:#fff;border-color:var(--blue-500);}
+        .btn-blue:hover{background:var(--blue-500);box-shadow:0 0 16px rgba(33,150,243,.35);}
+        .btn-ghost{background:white;color:var(--blue-300);border-color:rgba(37,99,235,.35);}
+        .btn-ghost:hover{background:rgba(37,99,235,.08);}
+        .btn-danger{background:rgba(239,68,68,.1);color:var(--ruby);border-color:rgba(239,68,68,.25);font-size:13px;}
+        .btn-danger:hover{background:rgba(239,68,68,.18);}
+
+        /* TOAST */
+        .toast{position:fixed;bottom:22px;right:22px;width:310px;background:white;border:1px solid #D1DCF0;
+            border-left:3px solid var(--blue-400);border-radius:var(--r-md);padding:13px 15px;z-index:999;
+            transform:translateX(360px);transition:transform .35s cubic-bezier(.2,.8,.2,1);}
+        .toast.on{transform:translateX(0);}
+        .toast-title{font-family:var(--font-serif);font-size:16.8px;font-weight:700;color:#0A0E1A;margin-bottom:4px;}
+        .toast-msg{font-size:15.6px;color:#374151;}
+
+        footer{display:flex;justify-content:space-between;padding:10px 0 2px;border-top:1px solid #E2E6EE;
+            font-family:var(--font-mono);font-size:11.4px;color:#64748B;letter-spacing:1px;}
+
+        /* ── RESPONSIVO (Melhoria 3) ── */
+        @media (max-width: 1100px){
+            .content-grid{grid-template-columns:1fr;}
+            .kpi-bar{grid-template-columns:repeat(3,1fr);}
+        }
+        @media (max-width: 700px){
+            .kpi-bar{grid-template-columns:1fr 1fr;}
+            .belt-details{grid-template-columns:1fr;}
+            main{padding:16px;}
+        }
+        @media (max-width: 420px){
+            .kpi-bar{grid-template-columns:1fr;}
+        }
+    </style>
+</head>
+<body>
+
+<header th:replace="~{fragments/header :: header(paginaAtiva='esteiras')}"></header>
+
+<main>
+    <div class="page-header">
+        <div>
+            <div class="page-title">Mapa de Esteiras</div>
+            <!-- CORRIGIDO: usa dados reais do controller -->
+            <div class="page-sub" th:text="${#lists.size(esteiras)} + ' esteiras cadastradas'">0 esteiras</div>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-ghost" href="/esteiras">↺ Atualizar</a>
+            <!-- CORRIGIDO: URL correta para cadastro -->
+            <a class="btn btn-blue" href="/esteiras/nova">+ Nova Esteira</a>
+        </div>
+    </div>
+
+    <!-- KPI BAR — dados reais do controller -->
+    <div class="kpi-bar">
+        <div class="kpi"><div class="kpi-icon ki-green">⬤</div><div>
+            <div class="kpi-val" th:text="${totalAtivas}">0</div>
+            <div class="kpi-lbl">Em Operação</div>
+            <div class="kpi-delta up">▲ Esteiras ativas</div></div></div>
+        <div class="kpi"><div class="kpi-icon ki-red">⬤</div><div>
+            <div class="kpi-val" th:text="${totalInativas}">0</div>
+            <div class="kpi-lbl">Inativas</div>
+            <div class="kpi-delta flat">● Fora de operação</div></div></div>
+        <div class="kpi"><div class="kpi-icon ki-amber">⚡</div><div>
+            <div class="kpi-val" th:text="${totalAlertas}">0</div>
+            <div class="kpi-lbl">Total de Alertas</div>
+            <div class="kpi-delta down">▲ Alertas registrados</div></div></div>
+        <div class="kpi"><div class="kpi-icon ki-blue">◆</div><div>
+            <div class="kpi-val" th:text="${totalSensores}">0</div>
+            <div class="kpi-lbl">Sensores</div>
+            <div class="kpi-delta flat">● Monitorados</div></div></div>
+        <div class="kpi"><div class="kpi-icon ki-violet">⬡</div><div>
+            <div class="kpi-val" th:text="${#lists.size(esteiras)}">0</div>
+            <div class="kpi-lbl">Total Esteiras</div>
+            <div class="kpi-delta flat">● Cadastradas</div></div></div>
+    </div>
+
+    <!-- CONTENT GRID -->
+    <div class="content-grid">
+        <div style="display:flex;flex-direction:column;gap:14px;">
+
+            <!-- MAP CARD (planta visual estática — referência visual) -->
+            <div class="map-card">
+                <div class="card-head">
+                    <div><div class="card-title">Planta do Pátio — Vista Esquemática</div>
+                        <div class="card-sub" style="margin-top:3px;">Referência visual do layout · dados reais nos cards abaixo</div></div>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <div class="pulse-dot"></div>
+                        <span class="card-sub">AO VIVO</span>
+                    </div>
+                </div>
+                <div class="map-wrap">
+                    <svg viewBox="0 0 900 260" width="100%" style="display:block;">
+                        <rect x="20" y="20" width="860" height="220" rx="8" class="plant-area"/>
+                        <text x="50"  y="46" class="plant-label">SETOR A</text>
+                        <text x="460" y="46" class="plant-label">SETOR B</text>
+                        <rect x="30"  y="55" width="400" height="155" rx="4" fill="rgba(33,150,243,.03)" stroke="rgba(33,150,243,.08)" stroke-width="1"/>
+                        <rect x="460" y="55" width="410" height="155" rx="4" fill="rgba(33,150,243,.03)" stroke="rgba(33,150,243,.08)" stroke-width="1"/>
+                        <polyline class="belt-line-bg ok" points="60,90 220,90 360,130"/>
+                        <polyline class="belt-line ok"    points="60,90 220,90 360,130"/>
+                        <circle cx="60"  cy="90" r="9" fill="#EEF2FF" class="node-circle" stroke="#10B981" stroke-width="2"/>
+                        <text x="60" y="74" class="node-label" text-anchor="middle">EST-01</text>
+                        <polyline class="belt-line-bg warn" points="60,185 200,185 360,155"/>
+                        <polyline class="belt-line warn"    points="60,185 200,185 360,155"/>
+                        <circle cx="60"  cy="185" r="9" fill="#EEF2FF" class="node-circle" stroke="#F59E0B" stroke-width="2"/>
+                        <text x="60" y="205" class="node-label" text-anchor="middle">EST-02</text>
+                        <rect x="340" y="120" width="44" height="30" rx="4" fill="#E0E8FF" stroke="rgba(37,99,235,.35)" stroke-width="1.5"/>
+                        <text x="362" y="138" class="node-label" text-anchor="middle" style="font-size:10px">CENTRAL</text>
+                        <polyline class="belt-line-bg ok" points="384,135 560,135 700,90"/>
+                        <polyline class="belt-line ok"    points="384,135 560,135 700,90"/>
+                        <circle cx="700" cy="90" r="9" fill="#EEF2FF" class="node-circle" stroke="#10B981" stroke-width="2"/>
+                        <text x="700" y="74" class="node-label" text-anchor="middle">EST-03</text>
+                    </svg>
+                </div>
+                <div class="map-legend">
+                    <div class="leg-item"><div class="leg-line" style="background:#EF4444"></div>Crítico</div>
+                    <div class="leg-item"><div class="leg-line" style="background:#F59E0B"></div>Atenção</div>
+                    <div class="leg-item"><div class="leg-line" style="background:#10B981"></div>Normal</div>
+                    <div class="leg-item"><div class="leg-line" style="background:#384F6A;border-top:1px dashed #384F6A;height:0"></div>Inativa</div>
+                </div>
+            </div>
+
+            <!-- BELT DETAIL CARDS — dados reais do banco -->
+            <div class="belt-details-wrap">
+                <div class="belt-details-head">
+                    <div>
+                        <div class="belt-details-title">Detalhes das Esteiras</div>
+                        <div class="belt-details-sub" th:text="${#lists.size(esteiras)} + ' esteira(s) cadastrada(s)'">0 esteiras</div>
+                    </div>
+                    <a href="/esteiras/nova" class="btn btn-blue" style="font-size:14px;">+ Nova Esteira</a>
+                </div>
+                <div class="belt-details">
+                    <!-- CORRIGIDO: th:each para iterar esteiras reais -->
+                    <div th:each="e : ${esteiras}"
+                         th:classappend="${!e.ativa} ? 'in-maint' : (${e.alertas != null and !#lists.isEmpty(e.alertas)} ? 'has-alert' : '')"
+                         class="belt-detail-card">
+                        <div class="bdc-top">
+                            <div>
+                                <div class="bdc-code" th:text="${e.nome}">Esteira</div>
+                                <div class="bdc-line" th:text="${e.localizacao}">Localização</div>
+                            </div>
+                            <div th:if="${e.ativa}"  class="chip chip-ok">Operando</div>
+                            <div th:unless="${e.ativa}" class="chip chip-maint">Inativa</div>
+                        </div>
+                        <div class="bdc-metrics">
+                            <div class="bdc-m">
+                                <span class="bdc-mv" th:text="${e.sensores != null ? e.sensores.size() : 0}">0</span>
+                                <span class="bdc-ml">Sensores</span>
+                            </div>
+                            <div class="bdc-m">
+                                <span class="bdc-mv" th:text="${e.alertas != null ? e.alertas.size() : 0}">0</span>
+                                <span class="bdc-ml">Alertas</span>
+                            </div>
+                            <div class="bdc-m">
+                                <span class="bdc-mv" th:text="'#' + ${e.id}">—</span>
+                                <span class="bdc-ml">ID</span>
+                            </div>
+                            <div class="bdc-m">
+                                <span class="bdc-mv" th:text="${e.ativa} ? 'Sim' : 'Não'">—</span>
+                                <span class="bdc-ml">Ativa</span>
+                            </div>
+                        </div>
+                        <div class="bdc-alerts">
+                            <span class="bdc-alert-count">
+                                Alertas:
+                                <span th:text="${e.alertas != null ? e.alertas.size() : 0}"
+                                      th:style="${e.alertas != null and !#lists.isEmpty(e.alertas)} ? 'color:var(--ruby)' : 'color:var(--emerald)'">0</span>
+                            </span>
+                            <div style="display:flex;gap:6px;">
+                                <a th:href="@{/esteiras/detalhe/{id}(id=${e.id})}" class="btn btn-ghost" style="font-size:13px;padding:4px 10px;">Detalhe</a>
+                                <a th:href="@{/esteiras/editar/{id}(id=${e.id})}" class="btn btn-ghost" style="font-size:13px;padding:4px 10px;">✏ Editar</a>
+                                <!-- CORRIGIDO (S5): exclusão agora é POST, não GET -->
+                                <form th:action="@{/esteiras/deletar/{id}(id=${e.id})}" method="post"
+                                      style="display:inline;margin:0;">
+                                    <th:block th:replace="~{fragments/csrf :: token}"/>
+                                    <button type="submit" class="btn btn-danger sdae-confirm-delete"
+                                            data-confirm-titulo="Excluir esta esteira?"
+                                            data-confirm-mensagem="Todos os sensores associados também serão removidos."
+                                            style="font-size:13px;padding:4px 10px;">✕</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Empty state quando não há esteiras -->
+                    <div th:if="${#lists.isEmpty(esteiras)}" class="belt-empty-state">
+                        <div class="belt-empty-icon">⬡</div>
+                        <div class="belt-empty-title">Nenhuma esteira cadastrada</div>
+                        <div class="belt-empty-msg">Clique em <strong>+ Nova Esteira</strong> para adicionar a primeira esteira ao sistema.</div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /left column -->
+
+        <!-- RIGHT PANEL -->
+        <div class="right-panel">
+
+            <!-- RANKING DE ALERTAS por esteira -->
+            <div class="alert-rank">
+                <div class="card-head">
+                    <div class="card-title">Esteiras com Alertas</div>
+                    <span class="card-sub">Hoje</span>
+                </div>
+                <div class="rank-list">
+                    <div th:each="e, iter : ${esteiras}"
+                         th:if="${e.alertas != null and !#lists.isEmpty(e.alertas)}"
+                         class="rank-row">
+                        <div class="rank-pos" th:classappend="${iter.index == 0} ? 'top1' : (${iter.index == 1} ? 'top2' : 'top3')"
+                             th:text="${iter.count}">1</div>
+                        <div class="rank-info">
+                            <div class="rank-code" th:text="${e.nome}">Esteira</div>
+                            <div class="rank-desc" th:text="${e.localizacao}">Local</div>
+                        </div>
+                        <div class="rank-num" th:text="${e.alertas.size()}" style="color:var(--ruby)">0</div>
+                    </div>
+                    <div th:if="${#lists.isEmpty(esteiras) or totalAlertas == 0}" class="panel-empty">
+                        <div class="panel-empty-icon">✓</div>
+                        <div class="panel-empty-msg">Nenhum alerta registrado</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STATUS SUMMARY -->
+            <div class="status-summary">
+                <div class="card-head"><div class="card-title">Resumo de Status</div></div>
+                <div class="sum-row">
+                    <div class="sum-label"><div class="sum-dot" style="background:var(--emerald)"></div>Ativas</div>
+                    <div class="sum-val" th:text="${totalAtivas}">0</div>
+                </div>
+                <div class="sum-row">
+                    <div class="sum-label"><div class="sum-dot" style="background:#64748B"></div>Inativas</div>
+                    <div class="sum-val" th:text="${totalInativas}">0</div>
+                </div>
+                <div class="sum-row">
+                    <div class="sum-label"><div class="sum-dot" style="background:var(--amber)"></div>Alertas registrados</div>
+                    <div class="sum-val" th:text="${totalAlertas}">0</div>
+                </div>
+                <div class="sum-row">
+                    <div class="sum-label">Total de sensores</div>
+                    <div class="sum-val" th:text="${totalSensores}">0</div>
+                </div>
+                <div class="sum-row">
+                    <div class="sum-label">Total de esteiras</div>
+                    <div class="sum-val" th:text="${#lists.size(esteiras)}">0</div>
+                </div>
+            </div>
+
+            <!-- TIMELINE DE ALERTAS RECENTES -->
+            <div class="timeline-card">
+                <div class="card-head">
+                    <div class="card-title">Alertas Recentes</div>
+                    <span class="card-sub" id="tlTime">--:--:--</span>
+                </div>
+                <div class="timeline-body">
+                    <!-- Busca alertas de todas as esteiras (máx 8) -->
+                    <div th:each="e : ${esteiras}">
+                        <div th:each="a, iter : ${e.alertas}" th:if="${iter.index < 3}" class="tl-item">
+                            <div class="tl-dot-wrap">
+                                <div class="tl-dot"
+                                     th:classappend="${a.nivelRisco.name() == 'CRITICO'} ? 'crit' : (${a.nivelRisco.name() == 'ATENCAO'} ? 'warn' : 'ok')"></div>
+                                <div class="tl-line"></div>
+                            </div>
+                            <div class="tl-info">
+                                <div class="tl-time" th:text="${a.dataHora != null ? #temporals.format(a.dataHora,'HH:mm:ss') : '—'}">--:--</div>
+                                <div class="tl-msg" th:text="${a.mensagem}">—</div>
+                                <div class="tl-tag" th:text="${e.localizacao}">—</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div th:if="${totalAlertas == 0}" class="panel-empty">
+                        <div class="panel-empty-icon">◷</div>
+                        <div class="panel-empty-msg">Sem eventos de alerta</div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /right-panel -->
+    </div><!-- /content-grid -->
+
+    <footer>
+        <span>Sistema de Automação de Esteiras &nbsp;|&nbsp; SDAE &nbsp;|&nbsp; Mapa de Esteiras</span>
+        <span id="fdate">—</span>
+    </footer>
+</main>
+
+<div class="toast" id="toast">
+    <div class="toast-title" id="tTitle">Notificação</div>
+    <div class="toast-msg"   id="tMsg">—</div>
+</div>
+
+<script>
+    setInterval(() => {
+        const el = document.getElementById('clk');
+        if (el) el.textContent = new Date().toLocaleTimeString('pt-BR');
+    }, 1000);
+    setInterval(() => {
+        const el = document.getElementById('tlTime');
+        if (el) el.textContent = new Date().toTimeString().slice(0, 8);
+    }, 1000);
+    (()=>{
+        const el = document.getElementById('fdate');
+        if (el) el.textContent = new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'long', year:'numeric'});
+    })();
+</script>
+<script th:src="@{/js/crud.js}"></script>
+<th:block th:replace="~{fragments/sdae-scripts :: bundle('esteiras-page.js')}"></th:block>
+<script th:src="@{/js/sdae-forms.js}"></script>
+</body>
+</html>

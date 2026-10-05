@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDAE — Detalhe do Sensor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/sdae-base.css}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        html{font-size:18px;}
+        body{background:#F4F6FA;color:#1A202C;font-family:var(--font-sans);min-height:100vh;}
+        main{padding:24px 28px 40px;max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:24px;}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .page-header{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:18px;border-bottom:1px solid #E8EDF5;}
+        .page-title{font-family:var(--font-serif);font-size:31px;font-weight:700;color:#0A0E1A;}.page-sub{font-family:var(--font-mono);font-size:12px;letter-spacing:2px;color:#4A5568;text-transform:uppercase;margin-top:4px;}
+        .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;}
+        .card{background:#fff;border:1px solid #E8EDF5;border-radius:var(--r-md);overflow:hidden;animation:fadeUp .5s ease both;}
+        .card-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #E8EDF5;background:#F9FAFC;}
+        .card-title{font-family:var(--font-serif);font-size:17px;font-weight:600;color:#0A0E1A;}
+        .card-body{padding:24px;}
+        .stat-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #E8EDF5;}.stat-item:last-child{border-bottom:none;}
+        .stat-label{font-size:13px;color:#4A5568;font-weight:500;}.stat-value{font-family:var(--font-mono);font-size:16px;font-weight:600;color:#0A0E1A;}
+        .badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.5px;font-family:var(--font-mono);}
+        .badge-online{background:rgba(16,185,129,.1);color:#059669;border:1px solid rgba(16,185,129,.25);}
+        .badge-offline{background:rgba(239,68,68,.1);color:#DC2626;border:1px solid rgba(239,68,68,.25);}
+        .badge-normal{background:rgba(16,185,129,.1);color:#059669;}
+        .badge-atencao{background:rgba(245,158,11,.1);color:#D97706;}
+        .badge-critico{background:rgba(239,68,68,.1);color:#DC2626;}
+        .chart-container{position:relative;height:300px;margin-top:20px;}
+        .btn{font-family:var(--font-sans);font-size:14px;font-weight:600;padding:8px 16px;border-radius:var(--r-sm);border:none;cursor:pointer;transition:all .18s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+        .btn-ghost{background:#fff;color:#4A5568;border:1px solid #D1DCF0;}.btn-ghost:hover{border-color:rgba(37,99,235,.35);}
+        .full-width{grid-column:1/-1;}
+        .status-box{padding:16px;border-radius:8px;background:#F4F6FA;margin-bottom:16px;}
+        .status-box strong{display:block;margin-bottom:8px;font-size:13px;color:#4A5568;}
+        .status-value{font-size:24px;font-weight:700;color:#2563EB;}
+        footer{border-top:1px solid #E2E6EE;padding:12px 0;display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:11px;color:#64748B;}
+        @media (max-width: 900px){
+            .grid-3{grid-template-columns:1fr;}
+        }
+    </style>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header(paginaAtiva='sensores')}"></header>
+<main>
+    <div class="page-header">
+        <div>
+            <div class="page-title" th:text="${sensor.modelo}">Sensor 01</div>
+            <div class="page-sub" th:text="${sensor.esteira != null} ? ${sensor.esteira.nome} : 'Sem esteira'">Esteira 01</div>
+        </div>
+        <a href="/sensores" class="btn btn-ghost">← Voltar</a>
+    </div>
+
+    <div class="grid-3">
+        <!-- Card 1: Status de Conexão -->
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title">Status</div>
+                <span class="badge" th:classappend="${sensor.conectado} ? 'badge-online' : 'badge-offline'" th:text="${sensor.conectado} ? '● Online' : '● Offline'">● Online</span>
+            </div>
+            <div class="card-body">
+                <div class="status-box">
+                    <strong>Conexão</strong>
+                    <div class="status-value" th:text="${sensor.conectado} ? 'Ativo' : 'Inativo'">Ativo</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">ID do Sensor</div>
+                    <div class="stat-value" th:text="${sensor.id}">1</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Tipo</div>
+                    <div class="stat-value">Laser + LDR</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Nível de Risco -->
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title">Nível de Risco</div>
+                <span class="badge" th:classappend="${sensor.nivelRisco != null and sensor.nivelRisco.name() == 'NORMAL'} ? 'badge-normal' : (${sensor.nivelRisco != null and sensor.nivelRisco.name() == 'ATENCAO'} ? 'badge-atencao' : 'badge-critico')" th:text="${sensor.nivelRisco != null ? sensor.nivelRisco.name() : 'NORMAL'}">NORMAL</span>
+            </div>
+            <div class="card-body">
+                <div class="status-box">
+                    <strong>Vibração Atual</strong>
+                    <div class="status-value" th:text="${sensor.leituraAtual != null} ? ${#numbers.formatDecimal(sensor.leituraAtual, 0, 1)} + '%' : '0.0%'">0.0%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Classificação</div>
+                    <div class="stat-value" th:text="${sensor.nivelRisco != null ? sensor.nivelRisco.name() : 'NORMAL'}">NORMAL</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Informações do Sensor -->
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title">Informações</div>
+            </div>
+            <div class="card-body">
+                <div class="stat-item">
+                    <div class="stat-label">API Key</div>
+                    <div class="stat-value" style="font-size:11px;word-break:break-all;" th:text="${sensor.apiKey != null} ? ${sensor.apiKey.substring(0, 8)} + '...' : 'N/A'">xxxxxxxx...</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Esteira</div>
+                    <div class="stat-value" th:text="${sensor.esteira != null} ? ${sensor.esteira.nome} : 'Nenhuma'">Esteira 01</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Última Leitura</div>
+                    <div class="stat-value" th:text="${sensor.ultimaLeituraTexto}">há 5 min</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico de Histórico -->
+    <div class="card full-width">
+        <div class="card-head">
+            <div class="card-title">Histórico de Leituras</div>
+            <span style="font-family:var(--font-mono);font-size:11px;color:#4A5568;">Últimas 24h</span>
+        </div>
+        <div class="card-body">
+            <p th:if="${#lists.isEmpty(historico)}" style="text-align:center;color:#4A5568;margin-bottom:20px;">
+                Ainda não há leituras gravadas para este sensor.
+            </p>
+            <p th:unless="${#lists.isEmpty(historico)}" style="text-align:center;color:#4A5568;margin-bottom:20px;">
+                Leituras persistidas no banco (mais antigas → mais recentes).
+            </p>
+            <div class="chart-container">
+                <canvas id="historicoChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <footer><span>SDAE | Detalhe do Sensor</span><span id="fdate">—</span></footer>
+</main>
+
+<script th:inline="javascript">
+    (()=>{const d=new Date();const el=document.getElementById('fdate');if(el)el.textContent=d.toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});})();
+
+    const historico = /*[[${historico}]]*/ [];
+    const ctx = document.getElementById('historicoChart')?.getContext('2d');
+    if (ctx) {
+        const pontos = Array.isArray(historico) ? historico : [];
+        const labels = pontos.map(h => {
+            if (!h || !h.dataHora) return '';
+            const d = new Date(h.dataHora);
+            return isNaN(d) ? String(h.dataHora) : d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+        });
+        const valores = pontos.map(h => Number(h && h.valor != null ? h.valor : 0));
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels.length ? labels : ['—'],
+                datasets: [{
+                    label: 'Vibração (%)',
+                    data: valores.length ? valores : [0],
+                    borderColor: '#2563EB',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { font: { family: 'var(--font-mono)' } }
+                    }
+                },
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 100,
+                        ticks: { callback: v => v + '%' }
+                    }
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>

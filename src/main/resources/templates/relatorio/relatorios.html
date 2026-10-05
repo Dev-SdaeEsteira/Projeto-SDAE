@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDAE — Relatórios</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/sdae-base.css}">
+    <style>
+
+        html{font-size:18px;}
+        body{background:#F4F6FA;color:#1A202C;font-family:var(--font-sans);min-height:100vh;overflow-x:hidden;
+            background-image:radial-gradient(ellipse 80% 40% at 50% -5%,rgba(255,255,255,0.1) 0%,transparent 55%),
+            linear-gradient(#E8EDF5 1px,transparent 1px),linear-gradient(90deg,#E8EDF5 1px,transparent 1px);
+            background-size:100% 100%,48px 48px,48px 48px;}
+        ::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:#F4F6FA;}
+        ::-webkit-scrollbar-thumb{background:#C7D7F8;border-radius:3px;}
+
+        
+
+        
+
+        
+
+        @keyframes pls{0%,100%{box-shadow:0 0 0 0 rgba(0,200,151,.5);}50%{box-shadow:0 0 0 5px rgba(0,200,151,0);}}
+        
+        main{padding:24px 28px 32px;max-width:1600px;margin:0 auto;display:flex;flex-direction:column;gap:20px;}
+        .page-header{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid #E8EDF5;}
+        .page-title{font-family:var(--font-serif);font-size:31.2px;font-weight:700;color:#0A0E1A;}
+        .page-sub{font-family:var(--font-mono);font-size:12px;letter-spacing:2px;color:#4A5568;text-transform:uppercase;margin-top:4px;}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+        .kpi-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+        .kpi{background:white;border:1px solid #E8EDF5;border-radius:var(--r-md);padding:15px 17px;
+            display:flex;align-items:center;gap:13px;transition:border-color .25s,box-shadow .25s;animation:fadeUp .5s ease both;}
+        .kpi:nth-child(1){animation-delay:.05s}.kpi:nth-child(2){animation-delay:.10s}.kpi:nth-child(3){animation-delay:.15s}
+        .kpi:nth-child(4){animation-delay:.20s}.kpi:nth-child(5){animation-delay:.25s}
+        .kpi:hover{border-color:rgba(37,99,235,.35);box-shadow:0 0 20px rgba(37,99,235,.08);}
+        .kpi-icon{width:42px;height:42px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:21.6px;flex-shrink:0;}
+        .ki-blue{background:rgba(37,99,235,.08);color:var(--blue-300);border:1px solid #D1DCF0;}
+        .ki-green{background:rgba(0,200,151,.08);color:var(--emerald);border:1px solid rgba(0,200,151,.2);}
+        .ki-red{background:rgba(239,68,68,.08);color:var(--ruby);border:1px solid rgba(239,68,68,.2);}
+        .ki-amber{background:rgba(245,158,11,.08);color:var(--amber);border:1px solid rgba(245,158,11,.2);}
+        .ki-violet{background:rgba(139,92,246,.08);color:var(--violet);border:1px solid rgba(139,92,246,.2);}
+        .kpi-val{font-family:var(--font-serif);font-size:31.2px;font-weight:700;color:#0A0E1A;line-height:1;letter-spacing:-.5px;}
+        .kpi-lbl{font-size:14.4px;font-weight:600;letter-spacing:.3px;color:#4A5568;margin-top:3px;text-transform:uppercase;}
+        .kpi-delta{font-family:var(--font-mono);font-size:12px;margin-top:4px;}
+        .kpi-delta.up{color:var(--emerald)}.kpi-delta.down{color:var(--ruby)}.kpi-delta.flat{color:#4A5568;}
+        .content-grid{display:grid;grid-template-columns:1fr 360px;gap:18px;}
+        .card{background:white;border:1px solid #E8EDF5;border-radius:var(--r-md);overflow:hidden;animation:fadeUp .5s .1s ease both;}
+        .card-head{display:flex;align-items:center;justify-content:space-between;padding:13px 18px 11px;border-bottom:1px solid #E8EDF5;}
+        .card-title{font-family:var(--font-serif);font-size:18px;font-weight:600;color:#0A0E1A;letter-spacing:.3px;}
+        .card-sub{font-family:var(--font-mono);font-size:12.6px;color:#4A5568;letter-spacing:1px;text-transform:uppercase;font-weight:500;}
+        .sbadge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:12.6px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;}
+        .sb-ok{background:rgba(0,200,151,.1);color:var(--emerald);border:1px solid rgba(0,200,151,.2);}
+        .sb-warn{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2);}
+        .sb-crit{background:rgba(239,68,68,.1);color:#FCA5A5;border:1px solid rgba(239,68,68,.25);}
+        .filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+        .filter-label{font-family:var(--font-mono);font-size:12px;letter-spacing:2px;color:#64748B;text-transform:uppercase;}
+        .filter-chip{font-family:var(--font-mono);font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid #D1DCF0;
+            color:#4A5568;cursor:pointer;transition:all .18s;background:transparent;}
+        .filter-chip:hover{color:#1A202C;border-color:rgba(37,99,235,.35);}
+        .filter-chip.active{background:rgba(37,99,235,.08);color:var(--blue-300);border-color:rgba(37,99,235,.35);}
+        .report-list{display:flex;flex-direction:column;}
+        .report-item{border-bottom:1px solid #E8EDF5;transition:background .15s;animation:slideIn .3s ease both;}
+        .report-item:last-child{border-bottom:none;}
+        .report-item:hover{background:rgba(37,99,235,.04);}
+        .ri-header{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;}
+        .ri-icon{width:36px;height:36px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:16.8px;flex-shrink:0;}
+        .ri-icon.crit{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);}
+        .ri-icon.warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);}
+        .ri-icon.info{background:rgba(37,99,235,.08);border:1px solid #D1DCF0;}
+        .ri-main{flex:1;}
+        .ri-title{font-size:15.6px;font-weight:600;color:#0A0E1A;letter-spacing:.2px;}
+        .ri-meta{font-family:var(--font-mono);font-size:11.4px;color:#4A5568;margin-top:3px;letter-spacing:.5px;}
+        .ri-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+        .ri-id{font-family:var(--font-mono);font-size:12.6px;color:#64748B;}
+        .ri-actions{display:flex;gap:6px;}
+        .ri-body{display:none;padding:0 18px 18px;border-top:1px solid #E2E6EE;background:rgba(255,255,255,.92);}
+        .ri-body.open{display:block;animation:slideIn .25s ease;}
+        .doc-header{background:linear-gradient(90deg,#EEF2FF,#FFFFFF);padding:16px 20px;border-bottom:1px solid #E2E6EE;
+            display:flex;justify-content:space-between;align-items:flex-start;margin-top:14px;border-radius:var(--r-md) var(--r-md) 0 0;
+            border:1px solid #D1DCF0;}
+        .doc-stamp{font-family:var(--font-serif);font-size:21.6px;font-weight:700;color:#0A0E1A;}
+        .doc-id{font-family:var(--font-mono);font-size:12.6px;color:#4A5568;margin-top:3px;letter-spacing:1.5px;}
+        .doc-body{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #D1DCF0;border-top:none;}
+        .doc-section{padding:14px 18px;border-right:1px solid #E8EDF5;}
+        .doc-section:last-child{border-right:none;}
+        .doc-section-title{font-family:var(--font-mono);font-size:12.6px;letter-spacing:2px;text-transform:uppercase;
+            color:#64748B;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #E8EDF5;}
+        .doc-field{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;padding:3px 0;}
+        .doc-key{font-size:12px;color:#64748B;}
+        .doc-val{font-family:var(--font-mono);font-size:13px;color:#1A202C;}
+        .doc-val.crit{color:var(--ruby);}.doc-val.warn{color:var(--amber);}.doc-val.ok{color:var(--emerald);}
+        .doc-footer{padding:10px 18px;background:rgba(255,255,255,.92);border:1px solid #D1DCF0;border-top:none;
+            border-radius:0 0 var(--r-md) var(--r-md);display:flex;justify-content:space-between;align-items:center;}
+        .right-panel{display:flex;flex-direction:column;gap:14px;animation:fadeUp .5s .2s ease both;}
+        .stat-panel{background:white;border:1px solid #E8EDF5;border-radius:var(--r-md);overflow:hidden;}
+        .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+        .stat-cell{padding:14px 16px;border-bottom:1px solid #E8EDF5;border-right:1px solid #E8EDF5;}
+        .stat-cell:nth-child(2n){border-right:none;}
+        .stat-cell:nth-last-child(-n+2){border-bottom:none;}
+        .stat-val{font-family:var(--font-serif);font-size:26.4px;font-weight:700;color:#0A0E1A;line-height:1;}
+        .stat-lbl{font-size:12px;color:#4A5568;margin-top:3px;text-transform:uppercase;letter-spacing:.4px;}
+        .belt-perf{background:white;border:1px solid #E8EDF5;border-radius:var(--r-md);overflow:hidden;}
+        .bp-list{display:flex;flex-direction:column;}
+        .bp-row{display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid #E8EDF5;}
+        .bp-row:last-child{border-bottom:none;}
+        .bp-code{font-family:var(--font-mono);font-size:13.2px;font-weight:500;color:#1A202C;flex:0 0 60px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .bp-bar-wrap{flex:1;}
+        .bp-bar-track{height:4px;background:#F0F4FF;border-radius:2px;overflow:hidden;}
+        .bp-bar-fill{height:100%;border-radius:2px;transition:width .6s ease;}
+        .bp-val{font-family:var(--font-mono);font-size:12px;color:#4A5568;flex:0 0 28px;text-align:right;}
+        .bp-chip{flex:0 0 60px;text-align:right;}
+        .btn{font-family:var(--font-sans);font-size:14.4px;font-weight:600;padding:7px 15px;border-radius:var(--r-sm);
+            border:1px solid transparent;cursor:pointer;transition:all .18s;text-decoration:none;display:inline-block;}
+        .btn-blue{background:var(--blue-600);color:#fff;border-color:var(--blue-500);}
+        .btn-blue:hover{background:var(--blue-500);}
+        .btn-ghost{background:white;color:var(--blue-300);border-color:rgba(37,99,235,.35);}
+        .btn-ghost:hover{background:rgba(37,99,235,.08);}
+        .btn-sm{padding:4px 10px;font-size:13.2px;}
+        .btn-danger-sm{font-size:13px;padding:4px 10px;background:rgba(239,68,68,.1);color:var(--ruby);
+            border:1px solid rgba(239,68,68,.25);border-radius:var(--r-sm);cursor:pointer;text-decoration:none;}
+        .btn-danger-sm:hover{background:rgba(239,68,68,.2);}
+        .empty-state{padding:32px;text-align:center;color:#A0AABB;font-family:var(--font-mono);font-size:13px;}
+        .toast{position:fixed;bottom:22px;right:22px;width:310px;background:white;border:1px solid #D1DCF0;
+            border-left:3px solid var(--blue-400);border-radius:var(--r-md);padding:13px 15px;z-index:999;
+            transform:translateX(360px);transition:transform .35s cubic-bezier(.2,.8,.2,1);}
+        .toast.on{transform:translateX(0);}
+        .toast-title{font-family:var(--font-serif);font-size:16.8px;font-weight:700;color:#0A0E1A;margin-bottom:4px;}
+        .toast-msg{font-size:15.6px;color:#374151;}
+        footer{display:flex;justify-content:space-between;padding:10px 0 2px;border-top:1px solid #E2E6EE;
+            font-family:var(--font-mono);font-size:11.4px;color:#64748B;letter-spacing:1px;}
+
+        /* ── RESPONSIVO (Melhoria 3) ── */
+        @media (max-width: 1100px){
+            .content-grid{grid-template-columns:1fr;}
+            .kpi-bar{grid-template-columns:repeat(3,1fr);}
+        }
+        @media (max-width: 700px){
+            .kpi-bar{grid-template-columns:1fr 1fr;}
+            .doc-body,.stats-grid{grid-template-columns:1fr;}
+            main{padding:16px;}
+        }
+        @media (max-width: 420px){
+            .kpi-bar{grid-template-columns:1fr;}
+        }
+    </style>
+</head>
+<body>
+
+<header th:replace="~{fragments/header :: header(paginaAtiva='relatorios')}"></header>
+
+<main>
+    <div class="page-header">
+        <div>
+            <div class="page-title">Central de Relatórios</div>
+            <!-- CORRIGIDO: dados reais -->
+            <div class="page-sub" th:text="${#lists.size(alertas)} + ' alertas registrados · dados em tempo real'">0 alertas</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <a href="/relatorios/exportar-pdf" class="btn btn-ghost">⬇ Exportar PDF</a>
+        </div>
+    </div>
+
+    <!-- KPI BAR — dados reais -->
+    <div class="kpi-bar">
+        <div class="kpi"><div class="kpi-icon ki-blue">◈</div><div>
+            <div class="kpi-val" th:text="${#lists.size(alertas)}">0</div>
+            <div class="kpi-lbl">Total Alertas</div>
+            <div class="kpi-delta flat">● Registros no banco</div></div></div>
+        <div class="kpi"><div class="kpi-icon ki-red">⚡</div><div>
+            <div class="kpi-val" th:text="${totalCritico}">0</div>
+            <div class="kpi-lbl">Críticos</div>
+            <div class="kpi-delta down" th:if="${totalCritico > 0}">▲ Requer atenção</div>
+            <div class="kpi-delta flat" th:if="${totalCritico == 0}">● Tudo normal</div></div></div>
+        <div class="kpi"><div class="kpi-icon ki-amber">⚠</div><div>
+            <div class="kpi-val" th:text="${totalAtencao}">0</div>
+            <div class="kpi-lbl">Atenção</div>
+            <div class="kpi-delta flat">● Monitorando</div></div></div>
+        <div class="kpi"><div class="kpi-icon ki-green">✔</div><div>
+            <div class="kpi-val" th:text="${totalNormal}">0</div>
+            <div class="kpi-lbl">Normais</div>
+            <div class="kpi-delta up">▲ Sistema estável</div></div></div>
+        <div class="kpi"><div class="kpi-icon ki-violet">◆</div><div>
+            <div class="kpi-val" th:text="${#lists.size(sensores)}">0</div>
+            <div class="kpi-lbl">Sensores</div>
+            <div class="kpi-delta flat">● Ativos</div></div></div>
+    </div>
+
+    <!-- CONTENT GRID -->
+    <div class="content-grid">
+        <div style="display:flex;flex-direction:column;gap:14px;">
+
+            <!-- FILTERS -->
+            <div class="filter-bar">
+                <span class="filter-label">Filtrar:</span>
+                <span class="filter-chip active" onclick="filterAlerts('all',this)">Todos</span>
+                <span class="filter-chip" onclick="filterAlerts('CRITICO',this)">Crítico</span>
+                <span class="filter-chip" onclick="filterAlerts('ATENCAO',this)">Atenção</span>
+                <span class="filter-chip" onclick="filterAlerts('NORMAL',this)">Normal</span>
+            </div>
+
+            <!-- LISTA DE ALERTAS — dados reais do banco via th:each -->
+            <div class="card" style="overflow:visible;">
+                <div class="card-head">
+                    <div class="card-title">Histórico de Alertas</div>
+                    <div style="display:flex;align-items:center;gap:9px;">
+                        <span class="card-sub" th:text="${#lists.size(alertas)} + ' registros'">0 registros</span>
+                        <div class="pulse-dot"></div>
+                    </div>
+                </div>
+                <div class="report-list" id="alertList">
+
+                    <!-- CORRIGIDO: th:each itera alertas reais do banco -->
+                    <div th:each="a, iter : ${alertas}"
+                         th:attr="data-nivel=${a.nivelRisco.name()}"
+                         class="report-item">
+                        <div class="ri-header" th:onclick="'toggleAlert(' + ${iter.index} + ')'">
+                            <div class="ri-icon"
+                                 th:classappend="${a.nivelRisco.name() == 'CRITICO'} ? 'crit' : (${a.nivelRisco.name() == 'ATENCAO'} ? 'warn' : 'info')"
+                                 th:text="${a.nivelRisco.name() == 'CRITICO'} ? '⚠' : (${a.nivelRisco.name() == 'ATENCAO'} ? '⚠' : '◈')">⚠</div>
+                            <div class="ri-main">
+                                <div class="ri-title" th:text="${a.mensagem}">—</div>
+                                <div class="ri-meta">
+                                    <span th:text="${a.dataHora != null ? #temporals.format(a.dataHora,'dd/MM/yyyy HH:mm:ss') : '—'}">—</span>
+                                    &nbsp;·&nbsp;
+                                    <span th:text="${a.esteira != null ? a.esteira.nome : 'SISTEMA'}">—</span>
+                                    &nbsp;·&nbsp;
+                                    <span th:text="${a.esteira != null ? a.esteira.localizacao : '—'}">—</span>
+                                </div>
+                            </div>
+                            <div class="ri-right">
+                                <span th:if="${a.nivelRisco.name() == 'NORMAL'}"  class="sbadge sb-ok">Normal</span>
+                                <span th:if="${a.nivelRisco.name() == 'ATENCAO'}" class="sbadge sb-warn">Atenção</span>
+                                <span th:if="${a.nivelRisco.name() == 'CRITICO'}" class="sbadge sb-crit">Crítico</span>
+                                <span class="ri-id" th:text="'ID #' + ${a.id}">—</span>
+                                <div class="ri-actions">
+                                    <!-- CORRIGIDO (S5): exclusão agora é POST, não GET -->
+                                    <form th:action="@{/alertas/deletar/{id}(id=${a.id})}" method="post"
+                                          style="display:inline;margin:0;">
+                                        <th:block th:replace="~{fragments/csrf :: token}"/>
+                                        <button type="submit" class="btn-danger-sm sdae-confirm-delete"
+                                                data-confirm-titulo="Excluir este alerta?"
+                                                data-confirm-mensagem="Esta ação não pode ser desfeita.">✕ Excluir</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Corpo expansível com detalhes do alerta -->
+                        <div class="ri-body" th:id="'alert-body-' + ${iter.index}">
+                            <div class="doc-header">
+                                <div>
+                                    <div class="doc-stamp">Registro de Alerta</div>
+                                    <div class="doc-id" th:text="'ID #' + ${a.id} + ' · SDAE Sistema de Automação de Esteiras'">—</div>
+                                </div>
+                                <div>
+                                    <span th:if="${a.nivelRisco.name() == 'NORMAL'}"  class="sbadge sb-ok" style="font-size:13px;padding:4px 12px;">NORMAL</span>
+                                    <span th:if="${a.nivelRisco.name() == 'ATENCAO'}" class="sbadge sb-warn" style="font-size:13px;padding:4px 12px;">ATENÇÃO</span>
+                                    <span th:if="${a.nivelRisco.name() == 'CRITICO'}" class="sbadge sb-crit" style="font-size:13px;padding:4px 12px;">CRÍTICO</span>
+                                    <div style="font-family:var(--font-mono);font-size:12px;color:#64748B;margin-top:4px;text-align:right;"
+                                         th:text="${a.dataHora != null ? #temporals.format(a.dataHora,'dd/MM/yyyy HH:mm') : '—'}">—</div>
+                                </div>
+                            </div>
+                            <div class="doc-body">
+                                <div class="doc-section">
+                                    <div class="doc-section-title">Identificação</div>
+                                    <div class="doc-field">
+                                        <span class="doc-key">Esteira</span>
+                                        <span class="doc-val" th:text="${a.esteira != null ? a.esteira.nome : 'Não vinculada'}">—</span>
+                                    </div>
+                                    <div class="doc-field">
+                                        <span class="doc-key">Localização</span>
+                                        <span class="doc-val" th:text="${a.esteira != null ? a.esteira.localizacao : '—'}">—</span>
+                                    </div>
+                                    <div class="doc-field">
+                                        <span class="doc-key">ID do Alerta</span>
+                                        <span class="doc-val" th:text="${a.id}">#</span>
+                                    </div>
+                                    <div class="doc-field">
+                                        <span class="doc-key">Data / Hora</span>
+                                        <span class="doc-val" th:text="${a.dataHora != null ? #temporals.format(a.dataHora,'dd/MM/yyyy HH:mm:ss') : '—'}">—</span>
+                                    </div>
+                                </div>
+                                <div class="doc-section">
+                                    <div class="doc-section-title">Detalhes</div>
+                                    <div class="doc-field">
+                                        <span class="doc-key">Mensagem</span>
+                                        <span class="doc-val" th:text="${a.mensagem}">—</span>
+                                    </div>
+                                    <div class="doc-field">
+                                        <span class="doc-key">Nível de Risco</span>
+                                        <span class="doc-val"
+                                              th:text="${a.nivelRisco.name()}"
+                                              th:classappend="${a.nivelRisco.name() == 'CRITICO'} ? 'crit' : (${a.nivelRisco.name() == 'ATENCAO'} ? 'warn' : 'ok')">—</span>
+                                    </div>
+                                    <div class="doc-field">
+                                        <span class="doc-key">Esteira ativa?</span>
+                                        <span class="doc-val" th:text="${a.esteira != null and a.esteira.ativa} ? 'Sim' : 'Não'">—</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="doc-footer">
+                                <span style="font-size:12px;color:#64748B;">Registrado automaticamente pelo SDAE</span>
+                                <!-- CORRIGIDO (S5): exclusão agora é POST, não GET -->
+                                <form th:action="@{/alertas/deletar/{id}(id=${a.id})}" method="post"
+                                      style="display:inline;margin:0;">
+                                    <th:block th:replace="~{fragments/csrf :: token}"/>
+                                    <button type="submit" class="btn-danger-sm sdae-confirm-delete"
+                                            data-confirm-titulo="Excluir este alerta?"
+                                            data-confirm-mensagem="Esta ação não pode ser desfeita.">✕ Excluir alerta</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Empty state -->
+                    <div th:if="${#lists.isEmpty(alertas)}" class="empty-state">
+                        ✓ Nenhum alerta registrado no sistema.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL — dados reais -->
+        <div class="right-panel">
+
+            <!-- RESUMO DO SISTEMA -->
+            <div class="stat-panel">
+                <div class="card-head"><div class="card-title">Resumo do Sistema</div><span class="card-sub" id="repDate">—</span></div>
+                <div class="stats-grid">
+                    <div class="stat-cell"><div class="stat-val" style="color:var(--ruby)" th:text="${totalCritico}">0</div><div class="stat-lbl">Críticos</div></div>
+                    <div class="stat-cell"><div class="stat-val" style="color:var(--amber)" th:text="${totalAtencao}">0</div><div class="stat-lbl">Atenção</div></div>
+                    <div class="stat-cell"><div class="stat-val" style="color:var(--emerald)" th:text="${totalNormal}">0</div><div class="stat-lbl">Normais</div></div>
+                    <div class="stat-cell"><div class="stat-val" th:text="${#lists.size(sensores)}">0</div><div class="stat-lbl">Sensores</div></div>
+                </div>
+            </div>
+
+            <!-- SENSORES POR NÍVEL -->
+            <div class="belt-perf">
+                <div class="card-head"><div class="card-title">Sensores por Nível</div><span class="card-sub">Atual</span></div>
+                <div class="bp-list">
+                    <div th:each="s : ${sensores}" class="bp-row">
+                        <div class="bp-code" th:text="${s.modelo}">—</div>
+                        <div class="bp-bar-wrap">
+                            <div class="bp-bar-track">
+                                <div class="bp-bar-fill"
+                                     th:style="'width:' + ${s.leituraAtual} + '%;background:' + (${s.nivelRisco.name() == 'CRITICO'} ? 'var(--ruby)' : (${s.nivelRisco.name() == 'ATENCAO'} ? 'var(--amber)' : 'var(--emerald)'))">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bp-val" th:text="${s.leituraAtual} + '%'"
+                             th:style="${s.nivelRisco.name() == 'CRITICO'} ? 'color:var(--ruby)' : (${s.nivelRisco.name() == 'ATENCAO'} ? 'color:var(--amber)' : '')">—</div>
+                        <div class="bp-chip">
+                            <span th:if="${s.nivelRisco.name() == 'NORMAL'}"  class="sbadge sb-ok" style="font-size:11px;">Normal</span>
+                            <span th:if="${s.nivelRisco.name() == 'ATENCAO'}" class="sbadge sb-warn" style="font-size:11px;">Atenção</span>
+                            <span th:if="${s.nivelRisco.name() == 'CRITICO'}" class="sbadge sb-crit" style="font-size:11px;">Crítico</span>
+                        </div>
+                    </div>
+                    <div th:if="${#lists.isEmpty(sensores)}" class="empty-state" style="padding:16px;">Nenhum sensor cadastrado.</div>
+                </div>
+            </div>
+
+            <!-- AÇÕES -->
+            <div style="background:white;border:1px solid #E8EDF5;border-radius:var(--r-md);padding:16px;">
+                <div style="font-family:var(--font-serif);font-size:16.8px;font-weight:600;color:#0A0E1A;margin-bottom:6px;">Exportar Dados</div>
+                <div style="font-size:13.2px;color:#4A5568;margin-bottom:12px;line-height:1.5;">
+                    Gere um relatório PDF consolidado com todos os sensores e alertas registrados.
+                </div>
+                <a href="/relatorios/exportar-pdf" class="btn btn-blue" style="width:100%;text-align:center;">⬇ Exportar PDF Completo</a>
+            </div>
+
+        </div><!-- /right-panel -->
+    </div><!-- /content-grid -->
+
+    <footer>
+        <span>SDAE — Sistema de Automação de Esteiras &nbsp;|&nbsp; Central de Relatórios</span>
+        <span id="fdate">—</span>
+    </footer>
+</main>
+
+<div class="toast" id="toast">
+    <div class="toast-title" id="tTitle">Notificação</div>
+    <div class="toast-msg"   id="tMsg">—</div>
+</div>
+
+<script>
+    setInterval(() => {
+        const el = document.getElementById('clk');
+        if (el) el.textContent = new Date().toLocaleTimeString('pt-BR');
+    }, 1000);
+    (()=>{
+        const now = new Date();
+        const fd = document.getElementById('fdate');
+        if (fd) fd.textContent = now.toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+        const rd = document.getElementById('repDate');
+        if (rd) rd.textContent = now.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
+    })();
+
+    function toggleAlert(idx) {
+        const body = document.getElementById('alert-body-' + idx);
+        if (!body) return;
+        const isOpen = body.classList.contains('open');
+        document.querySelectorAll('.ri-body.open').forEach(b => b.classList.remove('open'));
+        if (!isOpen) body.classList.add('open');
+    }
+
+    function filterAlerts(nivel, el) {
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        document.querySelectorAll('.report-item').forEach(r => {
+            const n = r.dataset.nivel;
+            r.style.display = (nivel === 'all' || nivel === n) ? '' : 'none';
+        });
+    }
+</script>
+<th:block th:replace="~{fragments/sdae-scripts :: bundle(null)}"></th:block>
+<script th:src="@{/js/sdae-forms.js}"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<!--
+    FRAGMENTO DE HEADER — SDAE
+    ===========================
+    Toda página que precisar do header chama este fragmento
+    passando qual item do menu deve ficar "ativo" (destacado).
+
+    Como usar em qualquer página (ex: esteiras/esteiras.html):
+
+        <header th:replace="~{fragments/header :: header(paginaAtiva='esteiras')}"></header>
+
+    Valores possíveis para paginaAtiva:
+        'dashboard' | 'esteiras' | 'sensores' | 'relatorios' | 'admin'
+-->
+<header th:fragment="header(paginaAtiva)">
+    <div class="brand">
+        <div class="brand-logo">SDAE</div>
+        <div>
+            <div class="brand-name">Sistema de Automação de Esteiras</div>
+        </div>
+    </div>
+
+    <div class="header-nav">
+        <a href="/dashboard"  class="nav-pill" th:classappend="${paginaAtiva == 'dashboard'} ? 'active'">Dashboard</a>
+        <a href="/esteiras"   class="nav-pill" th:classappend="${paginaAtiva == 'esteiras'} ? 'active'">Esteiras</a>
+        <a href="/sensores"   class="nav-pill" th:classappend="${paginaAtiva == 'sensores'} ? 'active'">Sensores</a>
+        <a href="/leituras"   class="nav-pill" th:classappend="${paginaAtiva == 'leituras'} ? 'active'">Leituras</a>
+        <a href="/relatorios" class="nav-pill" th:classappend="${paginaAtiva == 'relatorios'} ? 'active'">Relatórios</a>
+        <a href="/admin"      sec:authorize="hasRole('ADMINISTRADOR')" class="nav-pill" th:classappend="${paginaAtiva == 'admin'} ? 'active'">Administração</a>
+    </div>
+
+    <div class="header-right">
+        <div class="sys-badge">
+            <div class="pulse-dot"></div>
+            Sistema Online
+        </div>
+        <div class="clock" id="clk">00:00:00</div>
+        <div style="display:flex;align-items:center;gap:10px;padding-left:12px;border-left:1px solid #E2E6EE;">
+            <span class="header-user-name" style="font-size:13px;font-weight:500;color:#1A202C;" th:text="${nomeUsuario != null ? nomeUsuario : 'Usuário'}">Usuário</span>
+            <a href="/perfil" style="font-family:var(--font-sans, sans-serif);font-size:12px;font-weight:500;color:#2563EB;text-decoration:none;">Perfil</a>
+            <form th:action="@{/logout}" method="post" style="display:inline;margin:0;">
+                <th:block th:replace="~{fragments/csrf :: token}"/>
+                <button type="submit" style="font-family:var(--font-sans, sans-serif);font-size:12px;font-weight:500;color:#fff;background:#E53E3E;padding:4px 12px;border-radius:20px;border:none;cursor:pointer;line-height:1.4;">Sair</button>
+            </form>
+        </div>
+    </div>
+</header>
+
+</body>
+</html>

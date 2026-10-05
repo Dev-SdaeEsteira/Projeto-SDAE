@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDAE — Acesso ao Sistema</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/sdae-base.css}">
+    <style>
+
+        
+        html { font-size:16.8px; height:100%; }
+
+        body {
+            background:#F4F6FA;
+            color:#1A202C;
+            font-family: var(--font-sans);
+            align-items: flex-start;
+            padding: 40px 0;
+            overflow-y: auto;
+            background-image:
+                    radial-gradient(ellipse 70% 50% at 50% -10%,rgba(37,99,235,.07) 0%,transparent 60%),
+                    radial-gradient(ellipse 40% 40% at 80% 80%,rgba(16,185,129,.04) 0%,transparent 50%),
+                    linear-gradient(#E8EDF5 1px, transparent 1px),
+                    linear-gradient(90deg, #E8EDF5 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+        }
+
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            background: rgba(33,150,243,0.08);
+            border: 1px solid rgba(33,150,243,0.12);
+            animation: float linear infinite;
+            pointer-events: none;
+        }
+        @keyframes float {
+            0%   { transform: translateY(110vh) rotate(0deg);   opacity: 0; }
+            10%  { opacity: 1; }
+            90%  { opacity: .5; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        .login-wrap {
+            display: grid;
+            grid-template-columns: 1fr 480px;
+            width: 100%;
+            max-width: 1100px;
+            min-height: 100vh;
+            position: relative;
+            z-index: 10;
+            margin: 0 auto;
+        }
+
+        .brand-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px 64px;
+            position: relative;
+        }
+
+        .brand-panel::after {
+            content: '';
+            position: absolute;
+            right: 0; top: 10%; bottom: 10%;
+            width: 1px;
+            background: linear-gradient(to bottom,
+            transparent,
+            #D1DCF0 30%,
+            rgba(37,99,235,.35) 50%,
+            #D1DCF0 70%,
+            transparent);
+        }
+
+        .brand-logo-big {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, var(--blue-600), var(--blue-400));
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-serif);
+            font-weight: 700; font-size: 26px; color: #fff; letter-spacing: 1px;
+            box-shadow: 0 0 40px rgba(33,150,243,.4), 0 0 80px rgba(33,150,243,.15);
+            margin-bottom: 36px;
+            animation: logoPulse 3s ease-in-out infinite;
+        }
+        @keyframes logoPulse {
+            0%,100% { box-shadow: 0 0 40px rgba(33,150,243,.4), 0 0 80px rgba(33,150,243,.15); }
+            50%     { box-shadow: 0 0 60px rgba(33,150,243,.6), 0 0 100px rgba(33,150,243,.25); }
+        }
+
+        .brand-headline {
+            font-family: var(--font-serif);
+            font-size: 42px; font-weight: 700;
+            color: #0D1117; line-height: 1.15;
+            letter-spacing: -.5px;
+            margin-bottom: 16px;
+        }
+        .brand-headline span { color: var(--blue-300); }
+
+        .brand-desc {
+            font-size: 15px; line-height: 1.7;
+            color: #4A5568; max-width: 400px;
+            margin-bottom: 48px;
+        }
+
+        .sys-indicators { display: flex; flex-direction: column; gap: 14px; }
+
+        .sys-ind {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 18px;
+            background: white;
+            border: 1px solid #E8EDF5;
+            border-radius: 8px;
+            backdrop-filter: blur(8px);
+            transition: border-color .3s;
+        }
+        .sys-ind:hover { border-color: #D1DCF0; }
+
+        .sys-ind-icon {
+            width: 36px; height: 36px;
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px; flex-shrink: 0;
+        }
+        .si-green { background: rgba(0,200,151,.1); color: var(--emerald); border: 1px solid rgba(0,200,151,.2); }
+        .si-blue  { background: rgba(37,99,235,.08);   color: var(--blue-300); border: 1px solid #D1DCF0; }
+        .si-amber { background: rgba(245,158,11,.1); color: var(--amber);   border: 1px solid rgba(245,158,11,.2); }
+
+        .sys-ind-text { flex: 1; }
+        .sys-ind-label { font-size: 12px; font-weight: 500; color: #1A202C; }
+        .sys-ind-sub   { font-family: var(--font-mono); font-size: 10px; color: #64748B; margin-top: 2px; letter-spacing: .5px; }
+
+        .sys-ind-badge {
+            font-family: var(--font-mono); font-size: 9px;
+            padding: 3px 8px; border-radius: 20px;
+            letter-spacing: 1px;
+        }
+        .badge-online { background: rgba(0,200,151,.1); color: var(--emerald); border: 1px solid rgba(0,200,151,.2); }
+        .badge-active { background: rgba(37,99,235,.08);   color: var(--blue-300); border: 1px solid #D1DCF0; }
+
+        .login-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px 48px;
+            position: relative;
+        }
+
+        .login-header { margin-bottom: 36px; }
+        .login-title {
+            font-family: var(--font-serif);
+            font-size: 28px; font-weight: 700;
+            color: #0D1117; margin-bottom: 6px;
+        }
+        .login-sub {
+            font-family: var(--font-mono);
+            font-size: 10px; letter-spacing: 2px;
+            color: #4A5568; text-transform: uppercase;
+        }
+
+        .form-group { margin-bottom: 20px; position: relative; }
+
+        .form-label {
+            display: block;
+            font-size: 11px; font-weight: 500;
+            letter-spacing: .8px; text-transform: uppercase;
+            color: #4A5568; margin-bottom: 8px;
+        }
+
+        .input-wrap { position: relative; }
+
+        .input-icon {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            font-size: 14px; color: #64748B;
+            pointer-events: none;
+        }
+
+        .form-input {
+            width: 100%; height: 46px;
+            background: white;
+            border: 1px solid #D1DCF0;
+            border-radius: 6px;
+            padding: 0 44px;
+            font-family: var(--font-sans); font-size: 14px;
+            color: #0D1117;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .form-input::placeholder { color: #64748B; }
+        .form-input:focus {
+            border-color: var(--blue-400);
+            box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+        }
+        .form-input.error { border-color: var(--ruby); box-shadow: 0 0 0 3px rgba(239,68,68,.12); }
+
+        .pw-toggle {
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px;
+            color: #4A5568; cursor: pointer;
+            background: none; border: none; padding: 0;
+            transition: color .2s;
+        }
+        .pw-toggle:hover { color: var(--blue-300); }
+
+        .error-msg {
+            display: none;
+            background: rgba(239,68,68,.1);
+            border: 1px solid rgba(239,68,68,.3);
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 13px; color: #FCA5A5;
+            align-items: center; gap: 10px;
+        }
+        .error-msg.show { display: flex; animation: shake .4s ease; }
+        @keyframes shake {
+            0%,100% { transform: translateX(0); }
+            20%,60% { transform: translateX(-6px); }
+            40%,80% { transform: translateX(6px); }
+        }
+
+        .quick-label {
+            font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+            color: #64748B; margin-bottom: 10px;
+            font-family: var(--font-mono);
+        }
+        .quick-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 8px; margin-bottom: 24px;
+        }
+        .quick-btn {
+            padding: 8px 10px;
+            background: white;
+            border: 1px solid #E8EDF5;
+            border-radius: 6px; cursor: pointer;
+            transition: all .2s; text-align: left;
+        }
+        .quick-btn:hover { border-color: rgba(37,99,235,.35); background: rgba(37,99,235,.08); }
+        .quick-login { font-family: var(--font-mono); font-size: 11px; color: var(--blue-300); }
+        .quick-nivel {
+            font-size: 10px; color: #64748B;
+            margin-top: 2px; text-transform: uppercase; letter-spacing: .5px;
+        }
+
+        .btn-login {
+            width: 100%; height: 48px;
+            background: linear-gradient(135deg, var(--blue-600), var(--blue-500));
+            border: none; border-radius: 6px; cursor: pointer;
+            font-family: var(--font-sans); font-size: 14px; font-weight: 600;
+            color: #fff; letter-spacing: .5px;
+            transition: all .2s;
+            position: relative; overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .btn-login::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, var(--blue-500), var(--blue-400));
+            opacity: 0; transition: opacity .2s;
+        }
+        .btn-login:hover::before { opacity: 1; }
+        .btn-login:hover { box-shadow: 0 0 30px rgba(33,150,243,.4); }
+        .btn-login:active { transform: scale(.98); }
+        .btn-login.loading { pointer-events: none; }
+
+        .btn-text, .btn-spinner { position: relative; z-index: 1; }
+        .btn-spinner { display: none; }
+        .btn-login.loading .btn-text    { display: none; }
+        .btn-login.loading .btn-spinner { display: inline; }
+
+        .spinner {
+            display: inline-block; width: 18px; height: 18px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .login-footer {
+            text-align: center;
+            font-family: var(--font-mono); font-size: 9px;
+            letter-spacing: 1.5px; color: #64748B;
+            text-transform: uppercase;
+            border-top:1px solid #E2E6EE;
+            padding-top: 20px;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .login-wrap { grid-template-columns: 1fr; }
+            .brand-panel { display: none; }
+            .login-panel { padding: 40px 28px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="particle" style="width:80px;height:80px;left:10%;animation-duration:18s;animation-delay:0s"></div>
+<div class="particle" style="width:40px;height:40px;left:25%;animation-duration:22s;animation-delay:3s"></div>
+<div class="particle" style="width:120px;height:120px;left:60%;animation-duration:28s;animation-delay:1s"></div>
+<div class="particle" style="width:60px;height:60px;left:80%;animation-duration:16s;animation-delay:5s"></div>
+<div class="particle" style="width:30px;height:30px;left:45%;animation-duration:20s;animation-delay:8s"></div>
+
+<div class="login-wrap">
+
+    <div class="brand-panel">
+        <div class="brand-logo-big">SDAE</div>
+
+        <h1 class="brand-headline">
+            Monitoramento<br>
+            <span>Inteligente</span><br>
+            de Esteiras
+        </h1>
+
+        <p class="brand-desc">
+            Sistema SDAE — Sensores laser monitoram a bauxita em tempo real.
+            Quando há risco de queda, o pistão pneumático é acionado automaticamente,
+            preservando a operação e reduzindo perdas.
+        </p>
+
+        <div class="sys-indicators">
+            <div class="sys-ind">
+                <div class="sys-ind-icon si-green">⬤</div>
+                <div class="sys-ind-text">
+                    <div class="sys-ind-label">Sensores Laser Ativos</div>
+                    <div class="sys-ind-sub">SICK LMS511 · KEYENCE LJ-X8400</div>
+                </div>
+                <span class="sys-ind-badge badge-online">ONLINE</span>
+            </div>
+            <div class="sys-ind">
+                <div class="sys-ind-icon si-blue">◈</div>
+                <div class="sys-ind-text">
+                    <div class="sys-ind-label">Pistão Pneumático</div>
+                    <div class="sys-ind-sub">Acionamento automático por desvio</div>
+                </div>
+                <span class="sys-ind-badge badge-active">ATIVO</span>
+            </div>
+            <div class="sys-ind">
+                <div class="sys-ind-icon si-amber">⟳</div>
+                <div class="sys-ind-text">
+                    <div class="sys-ind-label">Dashboard em Tempo Real</div>
+                    <div class="sys-ind-sub">Atualização a cada 5 segundos</div>
+                </div>
+                <span class="sys-ind-badge badge-online">LIVE</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="login-panel">
+
+        <div class="login-header">
+            <div class="login-title">Acesso ao Sistema</div>
+            <div class="login-sub">SDAE · Credenciais obrigatórias</div>
+        </div>
+
+        <div class="error-msg" th:if="${erro}" style="display:flex;">
+            <span>⚠</span><span th:text="${erro}">E-mail ou senha incorretos.</span>
+        </div>
+        <div class="error-msg" th:if="${logout}" style="display:flex;background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.25);color:#059669;">
+            <span>✓</span><span th:text="${logout}">Saída realizada com sucesso.</span>
+        </div>
+        <form th:action="@{/login}" method="post">
+            <th:block th:replace="~{fragments/csrf :: token}"/>
+
+            <div class="form-group">
+                <label class="form-label">E-mail</label>
+                <div class="input-wrap">
+                    <span class="input-icon">◈</span>
+                    <input type="text" class="form-input" id="fLogin" name="email"
+                           placeholder="Ex.: admin@sdae.com.br"
+                           autocomplete="username">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Senha</label>
+                <div class="input-wrap">
+                    <span class="input-icon">●</span>
+                    <input type="password" class="form-input" id="fSenha" name="senha"
+                           placeholder="••••••••"
+                           autocomplete="current-password">
+                    <button class="pw-toggle" type="button" onclick="togglePw()">MOSTRAR</button>
+                </div>
+            </div>
+
+            <div class="quick-label">Acesso rápido — desenvolvimento</div>
+            <div class="quick-grid">
+                <button class="quick-btn" type="button" onclick="preencher('admin@sdae.com.br','admin123')">
+                    <div class="quick-login">admin@sdae.com.br</div>
+                    <div class="quick-nivel">Administrador</div>
+                </button>
+            </div>
+
+            <button type="submit" class="btn-login">
+                <span class="btn-text">Entrar no Sistema</span>
+            </button>
+        </form>
+        <a href="/welcome" style="display:block;text-align:center;font-family:var(--font-mono);font-size:11px;color:#94A3B8;text-decoration:none;margin-bottom:16px;letter-spacing:.5px;">← Página inicial</a>
+
+        <div class="login-footer">
+            SDAE - Sistemas de Automações de Esteiras &nbsp;|&nbsp; Senai
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function togglePw() {
+        const inp = document.getElementById('fSenha');
+        const btn = document.querySelector('.pw-toggle');
+        const show = inp.type === 'password';
+        inp.type = show ? 'text' : 'password';
+        btn.textContent = show ? 'OCULTAR' : 'MOSTRAR';
+    }
+    function preencher(email, senha) {
+        document.getElementById('fLogin').value = email;
+        document.getElementById('fSenha').value = senha;
+        document.querySelector('form').submit(); // ← preenche e já envia o login
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('fLogin').focus();
+    });
+</script>
+<script th:src="@{/js/api.js}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('logout')) return;
+
+        try {
+            const r = await fetch('/api/auth/me', { credentials: 'same-origin' });
+            if (r.ok) {
+                const d = await r.json();
+                if (typeof Sessao !== 'undefined') Sessao.salvar(d.nome, d.nivel, d.login);
+                const next = params.get('next');
+                window.location.replace(next || '/dashboard');
+            }
+        } catch (_){
+        }
+    });
+</script>
+<script th:src="@{/js/sdae-forms.js}"></script>
+</body>
+</html>
